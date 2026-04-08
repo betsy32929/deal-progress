@@ -1545,6 +1545,31 @@ tbody tr:hover td{background:#f5f9ff}
     max-width:none !important;
   }
 
+
+
+/* ===== mobile 橫向滑動修正 ===== */
+@media (max-width:860px){
+  html,body{
+    overflow-x:auto !important;
+    -webkit-overflow-scrolling:touch;
+  }
+  body{
+    min-width:1100px;
+  }
+  .topbar,
+  .container,
+  .modal{
+    min-width:1100px;
+  }
+  .container{
+    width:max-content;
+  }
+  .overlay{
+    overflow:auto;
+    justify-content:flex-start;
+  }
+}
+
 </style>
 </head>
 <body>
