@@ -1,0 +1,3625 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>成交進度</title>
+<style>
+  :root{
+    --bg:#f6f8fc;
+    --bg2:#eef4fb;
+    --card:#ffffff;
+    --text:#1f3652;
+    --muted:#7288a1;
+    --line:#dbe5f1;
+    --navy:#23476f;
+    --navy2:#2f638f;
+    --primary:#4a7fda;
+    --primary-soft:#eef5ff;
+    --cyan:#3d8dff;
+    --cyan-soft:#eef7ff;
+    --green:#1e8b63;
+    --green-soft:#eef8f3;
+    --red:#d55252;
+    --red-soft:#fff2f2;
+    --amber:#c68324;
+    --amber-soft:#fff7eb;
+    --gray:#627489;
+    --gray-soft:#f4f7fb;
+    --shadow:0 10px 26px rgba(39,68,106,.06);
+    --radius:18px;
+    --radius-sm:12px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Microsoft JhengHei","PingFang TC",sans-serif;
+    color:var(--text);
+    background:linear-gradient(180deg,#f9fbfe 0%, #f4f7fb 100%);
+  }
+  .topbar{
+    position:sticky; top:0; z-index:40;
+    background:linear-gradient(120deg,#24486f 0%, #3f6f98 100%);
+    color:#fff;
+    box-shadow:0 10px 28px rgba(13,27,46,.16);
+  }
+  .top-stripe{height:5px; background:linear-gradient(90deg,#8cb9ff 0%, #a8dfcf 34%, #ffdca1 66%, #f6bfd8 100%)}
+  .top-inner{padding:18px 22px 16px}
+  .top-row{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+  .title{font-size:32px; font-weight:900; letter-spacing:1px; margin-right:auto}
+  .btn{
+    border:none; border-radius:999px; cursor:pointer; font-weight:800;
+    padding:10px 16px; font-size:14px; transition:.18s ease; font-family:inherit;
+  }
+  .btn:hover{transform:translateY(-1px)}
+  .btn-primary{background:#fff; color:var(--navy)}
+  .btn-secondary{background:rgba(255,255,255,.14); color:#fff; border:1px solid rgba(255,255,255,.18)}
+  .chip-row{margin-top:12px; display:flex; gap:8px; flex-wrap:wrap}
+  .chip{
+    display:inline-flex; align-items:center; gap:8px; padding:7px 12px; border-radius:999px;
+    font-size:12px; font-weight:700; background:rgba(255,255,255,.13); color:#eef6ff; border:1px solid rgba(255,255,255,.10);
+  }
+  details.sync-box{
+    margin-top:14px; border:1px solid rgba(255,255,255,.16); border-radius:16px; overflow:hidden;
+    background:rgba(255,255,255,.06)
+  }
+  details.sync-box > summary{list-style:none; cursor:pointer; padding:11px 14px; font-weight:800}
+  details.sync-box > summary::-webkit-details-marker{display:none}
+  .sync-body{padding:0 14px 14px; display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  .sync-body input{
+    width:100%; padding:11px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.1); color:#fff; outline:none;
+  }
+  .sync-body input::placeholder{color:rgba(255,255,255,.55)}
+
+  .container{max-width:1640px; margin:22px auto 34px; padding:0 20px}
+  .panel{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); overflow:hidden; margin-bottom:18px;
+  }
+  .panel-header{
+    background:linear-gradient(180deg,#f7fbff 0%, #edf4fb 100%);
+    padding:14px 18px; border-bottom:1px solid #e2ebf6; display:flex; align-items:center; gap:12px;
+  }
+  .panel-header::before{content:""; width:5px; height:22px; border-radius:999px; background:linear-gradient(180deg,#6da4ff 0%, #2f6fd6 100%)}
+  .panel-header h2{margin:0; font-size:20px; font-weight:900}
+  .panel-header .count{margin-left:auto}
+.header-actions{margin-left:auto; display:flex; align-items:center; gap:8px}
+.ghost-btn{border:1px solid #d7e4f3; background:#fff; color:#305887; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:800; cursor:pointer}
+.ghost-btn:hover{background:#f4f8fd}
+  .count{
+    display:inline-flex; align-items:center; padding:6px 11px; border-radius:999px; font-size:12px; font-weight:800;
+    background:#eef4ff; color:#315faa; border:1px solid #dce8ff;
+  }
+  .panel-body{padding:16px 18px 18px}
+  .filters{display:flex; flex-wrap:nowrap; align-items:center; gap:10px; margin-bottom:12px; overflow-x:auto; padding-bottom:2px}
+  .filters::-webkit-scrollbar{height:8px}
+  .filters::-webkit-scrollbar-thumb{background:#d7e2ef; border-radius:999px}
+  .filters input,.filters select{min-width:150px; flex:1 1 0; width:auto}
+  .filter-select{max-width:none}
+  .progress-filters{}
+  .list-note{max-width:220px; color:#546b86; line-height:1.45; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .proxy-inline{display:grid; grid-template-columns:96px 64px minmax(340px,1fr); align-items:center; column-gap:30px; row-gap:0; width:100%}
+  .proxy-inline .small-action{height:34px; min-width:96px; padding:0 20px; justify-self:start; white-space:nowrap; writing-mode:horizontal-tb; text-orientation:mixed; display:inline-flex; align-items:center; justify-content:center}
+  .proxy-note-label{font-size:13px; font-weight:900; color:#5d7490; white-space:nowrap; line-height:1; margin-left:8px}
+  .proxy-inline input{width:100%; min-width:0; margin-left:0}
+  .click-row td:first-child{font-weight:700; color:#35557d}
+
+  input, textarea, select{
+    width:100%; padding:10px 11px; border-radius:12px; border:1px solid #d5e1ef; background:#fff;
+    color:var(--text); font:inherit; outline:none; transition:.15s ease;
+  }
+  input:focus, textarea:focus, select:focus{border-color:#8db4f1; box-shadow:0 0 0 4px rgba(81,132,212,.10)}
+  input:disabled{background:#f4f7fb; color:#96a6b8}
+  textarea{min-height:96px; resize:vertical}
+  .date-input{width:9ch; max-width:9ch; min-width:9ch; text-align:center}
+  .money-input{max-width:150px}
+  .small-input{max-width:168px}
+  .wide-input{min-width:220px}
+  label{display:block; font-size:12px; font-weight:800; color:#5d7490; margin-bottom:6px}
+
+  .table-wrap{overflow-y:auto; overflow-x:hidden; max-height:520px}
+.table-wrap.closed-scroll{max-height:520px; overflow-y:auto; overflow-x:hidden}
+.table-wrap.waiting-close-scroll{max-height:420px; overflow-y:auto; overflow-x:hidden}
+.hidden-col{display:none}
+.current-progress-box{display:block; max-width:220px; padding:7px 10px; border:1px solid #dbe6f3; border-radius:10px; background:#f8fbff; color:#355072; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.2}
+.current-progress-box.empty{color:#9aaabc; background:#f8fafc}
+  table{width:100%; min-width:0; border-collapse:separate; border-spacing:0; table-layout:fixed}
+  th, td{padding:10px 6px; border-bottom:1px solid #e8eef6; font-size:12px; text-align:center; vertical-align:middle; white-space:nowrap}
+  th{position:sticky; top:0; z-index:1; background:#f3f7fd; color:#4b6888; font-weight:900}
+  tbody tr:nth-child(even){background:#fbfdff}
+  .action-row{display:flex; gap:6px; flex-wrap:wrap}
+  .mini-btn{border:none; border-radius:999px; padding:6px 10px; font-size:12px; font-weight:800; cursor:pointer}
+  .mini-edit{background:#ecf3ff; color:#1f5db9}
+  .mini-close{background:#eff9f4; color:#167854}
+  .mini-open{background:#fff5e9; color:#b96b10}
+  .mini-del{background:#fff2f2; color:#b53838}
+  .empty{padding:28px 16px; text-align:center; color:var(--muted)}
+
+  .tag{display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:900}
+  .tag.progress{background:#edf4ff; color:#2a62c6}
+  .tag.closed{background:#edf8f2; color:#167451}
+
+  .overlay{
+    position:fixed; inset:0; background:rgba(11,25,43,.42); backdrop-filter: blur(2px);
+    display:none; align-items:flex-start; justify-content:center; padding:22px; z-index:80;
+  }
+  .overlay.show{display:flex}
+  .modal{
+    width:min(1520px, 100%); max-height:calc(100vh - 44px); overflow:auto;
+    background:#f7faff; border-radius:26px; box-shadow:0 24px 60px rgba(10,27,49,.22); border:1px solid rgba(216,227,240,.9);
+  }
+  .modal-head{
+    position:sticky; top:0; z-index:5; padding:16px 18px 14px; background:linear-gradient(120deg,#173453 0%, #255179 100%); color:#fff;
+    border-top-left-radius:26px; border-top-right-radius:26px;
+  }
+  .modal-head-top{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
+  .modal-head h3{margin:0; font-size:24px; font-weight:900}
+  .object-live{display:none}
+  .modal-head .meta{margin-left:auto; display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .modal-head .chip{padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.12); color:#fff; font-size:12px; font-weight:700}
+  .close-btn{background:#fff; color:var(--navy)}
+  .modal-body{padding:18px}
+  .section-card{
+    background:#fff; border:1px solid #d9e4f1; border-radius:18px; overflow:hidden; margin-bottom:14px;
+    box-shadow:0 8px 22px rgba(18,45,77,.05)
+  }
+  .section-title{
+    position:relative; padding:12px 16px 12px 20px; font-size:18px; font-weight:900; color:#24405f;
+    background:linear-gradient(180deg,#f8fbff 0%, #f2f7fd 100%); border-bottom:1px solid #e4edf7;
+  }
+  .section-title::before{content:""; position:absolute; left:0; top:0; bottom:0; width:5px; background:linear-gradient(180deg,#8ab2ff 0%, #2f6fd6 100%)}
+  .section-title.green::before{background:linear-gradient(180deg,#78d0ae 0%, #279a70 100%)}
+  .section-title.pink::before{background:linear-gradient(180deg,#f1abc5 0%, #d96e9b 100%)}
+  .section-title.gold::before{background:linear-gradient(180deg,#f0c77f 0%, #c5871f 100%)}
+  .section-body{padding:16px}
+  .grid{display:grid; gap:12px}
+  .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .grid-5{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .grid-6{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .basic-top-grid{grid-template-columns:minmax(340px,1.9fr) 140px 140px 160px}
+
+  .line-stack{display:grid; gap:10px}
+  .line-row{
+    display:grid; gap:10px; align-items:end;
+    grid-template-columns:minmax(210px,260px) 130px minmax(240px,1fr) 120px 210px;
+    padding:12px 14px; border:1px solid #e3ebf5; border-radius:16px; background:#fcfdff;
+  }
+  .line-row.no-note{grid-template-columns:minmax(210px,260px) 130px 1fr 120px 210px}
+  .line-row.compact-buttons{grid-template-columns:minmax(210px,260px) auto minmax(220px,1fr) 120px 210px}
+  .line-label{font-size:14px; font-weight:900; color:#1f3d5d; padding-bottom:8px}
+  .line-update{font-size:12px; color:#7a8ea7; padding-bottom:9px; white-space:nowrap}
+
+  .inline-field{display:flex; align-items:center; gap:0; flex-wrap:nowrap; min-width:0}
+  .inline-field label{margin:0 0 0 6px; white-space:nowrap; flex:0 0 42px; text-align:right}
+  .inline-field input{width:auto; flex:1 1 auto; min-width:0}
+  .line-row .inline-field .date-input{width:9ch; max-width:9ch; min-width:9ch; text-align:center}
+  .line-row .inline-field .small-input{max-width:158px}
+  .line-row .inline-field .money-input{max-width:140px}
+  .line-row .inline-field .wide-inline{min-width:180px}
+  .line-row.fee-inline{grid-template-columns:minmax(180px,220px) 150px 160px minmax(340px,1fr) 90px 180px}
+  .line-row.method-inline{grid-template-columns:minmax(180px,220px) minmax(620px,1.9fr) 90px 180px}
+  .line-row.date-inline{grid-template-columns:minmax(180px,240px) 160px minmax(260px,1fr) 90px 180px}
+  .line-row.date-inline .line-update,.line-row.method-inline .line-update,.line-row.fee-inline .line-update{padding-bottom:0}
+  .basic-label-red{color:#cf4545 !important}
+  .basic-label-blue{color:#2d67c8 !important}
+  .list-note-short{max-width:150px; color:#546b86; line-height:1.45; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .list-progress-short{max-width:160px; color:#546b86; line-height:1.45; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .notary-cell{min-width:120px; line-height:1.45}
+  
+  .click-row{cursor:pointer; transition:background .16s ease, transform .16s ease}
+  .click-row:hover td{background:#f3f8ff}
+  .click-row td:first-child{font-weight:800; color:#284a77}
+  .click-row td{transition:background .16s ease}
+  .expand-cell{padding-left:6px; padding-right:4px}
+  .expand-btn{
+    width:28px; height:28px; border:none; border-radius:999px; cursor:pointer;
+    background:#edf4ff; color:#2a62c6; font-weight:900; font-size:14px; line-height:1;
+  }
+  .expand-btn:hover{background:#e1edff}
+  .expand-btn.open{background:#dce9ff}
+  .progress-detail-row td{
+    background:#f9fbff; border-bottom:1px solid #e3ebf5; padding:0 10px 12px 10px;
+  }
+  .progress-detail-wrap{
+    margin-left:34px; margin-right:8px; border:1px solid #dce7f3; border-radius:14px;
+    background:#fff; padding:12px 14px;
+  }
+  .progress-detail-label{font-size:12px; font-weight:900; color:#5a7290; margin-bottom:6px}
+  .progress-detail-text{white-space:pre-wrap; line-height:1.65; color:#2f4867}
+  .progress-detail-empty{color:#9aabbd}
+  .col-arrow{width:44px}
+  .progress-table th,.progress-table td{text-align:center; vertical-align:middle}
+  .progress-table .object-td,.progress-table .dual-cell,.progress-table .notary-cell{white-space:normal}
+  .progress-table .object-cell,.progress-table .agent-cell,.progress-table .notary-cell,.progress-table .dual-value{text-align:center}
+  .progress-table .object-cell{display:block; margin:0 auto}
+  .progress-table .expand-cell{text-align:center; vertical-align:middle}
+
+  .progress-table .col-escrow,.progress-table td.escrow-td{white-space:nowrap}
+  .escrow-cell{display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:800}
+  .clear-btn{flex:0 0 auto; min-width:108px; white-space:nowrap}
+  .date-invalid{border-color:#e26969 !important; background:#fff4f4 !important; color:#b43a3a}
+
+  .click-row.selected-row td{background:#eef5ff}
+  .click-row.selected-row:hover td{background:#e8f1ff}
+  .th-sub{display:block; margin-top:4px; font-size:11px; color:#7b8ea7; font-weight:800; line-height:1.2}
+  .col-date{width:70px}
+  .col-object{width:164px}
+  .col-agent{width:92px}
+  .col-notary{width:92px}
+  .col-escrow{width:172px}
+  .col-fee{width:118px}
+  .col-company{width:92px}
+  .col-updated{width:102px}
+  .preview-card{margin-top:12px; border:1px solid #dce6f2; border-radius:16px; background:linear-gradient(180deg,#fbfdff 0%,#f7faff 100%); overflow:hidden}
+  .preview-head{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 16px; border-bottom:1px solid #e4edf7}
+  .preview-head .preview-title{font-size:16px; font-weight:900; color:#1f3d5d}
+  .preview-head .preview-object{font-size:16px; font-weight:900; color:#244f87}
+  .preview-head .preview-updated{margin-left:auto; font-size:12px; color:#7a8ea7}
+  .preview-body{padding:14px 16px 16px}
+  .preview-meta{display:grid; grid-template-columns:repeat(4,minmax(160px,1fr)); gap:10px; margin-bottom:12px}
+  .preview-box{border:1px solid #e3ebf5; background:#fff; border-radius:14px; padding:12px 14px; min-height:82px}
+  .preview-box label{margin-bottom:8px}
+  .preview-text{white-space:pre-wrap; line-height:1.6; color:#37506d}
+  .preview-empty{color:#98a8bb}
+  .preview-actions{display:flex; justify-content:flex-end; margin-top:12px}
+  .preview-edit-btn{border:none; border-radius:999px; padding:9px 14px; background:#edf4ff; color:#275db7; font-weight:900; cursor:pointer; font-family:inherit}
+  .restore-btn{height:30px; padding:0 12px; border-radius:999px; border:1px solid #cfdced; background:#fff; color:#315d98; cursor:pointer; font-weight:800; font-family:inherit}
+.status-badge{
+    display:inline-flex; align-items:center; justify-content:center; min-width:76px; height:34px;
+    border-radius:999px; font-size:12px; font-weight:900; padding:0 12px;
+  }
+  .status-badge.pending{background:var(--red-soft); color:var(--red)}
+  .status-badge.done{background:var(--green-soft); color:var(--green)}
+  .status-badge.gray{background:var(--gray-soft); color:var(--gray)}
+  .status-badge.amber{background:var(--amber-soft); color:var(--amber)}
+  .status-badge.compact{min-width:68px; height:28px; padding:0 10px; font-size:12px; border-radius:999px}
+  .status-stack{display:flex; flex-direction:column; gap:4px; min-width:88px}
+  .status-date{font-size:11px; color:#7a8da6; line-height:1.2}
+  .small-action{height:34px; min-width:56px; padding:0 14px; border-radius:999px; border:none; cursor:pointer; font-weight:900; font-family:inherit; white-space:nowrap; writing-mode:horizontal-tb; text-orientation:mixed; flex:0 0 auto; line-height:34px; text-align:center}
+  .small-action.primary{background:#ecf3ff; color:#255dbb}
+  .small-action.active{background:#2f6fd6; color:#fff}
+  .state-group{display:flex; gap:8px; flex-wrap:wrap; padding-bottom:2px}
+  .state-btn{
+    height:34px; padding:0 13px; border-radius:999px; border:1px solid #d8e3ef; background:#fff; color:#45627f; cursor:pointer; font-weight:900;
+  }
+  .state-btn.active{background:#edf4ff; color:#2359ba; border-color:#b7cff7}
+  .formula{
+    margin-top:0; padding:0; color:#1e83f2; font-weight:900; font-size:15px; display:flex; align-items:center; text-align:left; justify-content:flex-start;
+  }
+  .object-cell,.agent-cell{
+    white-space:normal; word-break:break-word; line-height:1.5; display:block;
+  }
+  .object-cell{font-weight:800; color:#284a77; min-width:0; max-width:100%; overflow-wrap:anywhere}
+  .object-td{white-space:normal}
+  .agent-cell{color:#35557d}
+  .dual-cell{white-space:normal}
+  .dual-item + .dual-item{margin-top:6px}
+  .dual-value{display:block; line-height:1.45}
+  .list-state{
+    display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:900; white-space:nowrap;
+  }
+  .list-state.done{background:#edf8f3; color:#167854; border:1px solid #cfeedd}
+  .list-state.pending{background:#fff1f1; color:#c63f3f; border:1px solid #ffd9d9}
+  .list-state.amber{background:#fff7ea; color:#b77718; border:1px solid #f2dfb3}
+  .method-pack{display:flex; align-items:center; gap:10px; flex-wrap:nowrap; min-width:0}
+  .method-pack .state-group{flex-wrap:nowrap; flex:0 0 auto}
+  .method-pack .inline-field{display:flex; align-items:center; gap:8px; flex:0 1 360px; min-width:0}
+  .method-pack .inline-field label{margin:0; white-space:nowrap}
+  .method-pack .inline-field input{min-width:0; flex:1 1 auto}
+  .accessory-inline-btn{width:72px; min-width:72px; height:34px; padding:0; margin-right:32px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; white-space:nowrap; font-size:15px; letter-spacing:0; flex:0 0 72px; position:relative; z-index:1}
+
+  .proxy-inline{overflow:visible}
+  .proxy-inline .small-action,.proxy-inline input{position:relative; z-index:1}
+  .proxy-inline input{padding-left:14px}
+  .proxy-inline input::placeholder{letter-spacing:0}
+
+  .progress-toggle-btn{
+    border:1px solid #d5e3f4; border-radius:999px; background:#f7fbff; color:#2e629e; font-weight:900; font-size:12px;
+    padding:7px 12px; cursor:pointer; white-space:nowrap;
+  }
+  .progress-toggle-btn.open{background:#ecf4ff; border-color:#bfd4f2}
+  .progress-inline-row td{background:#fbfdff; padding:0 10px 10px; border-bottom:1px solid #e7edf5}
+  .progress-inline-box{
+    margin:0 0 0 0; display:flex; align-items:center; gap:10px; min-height:38px; padding:8px 12px;
+    border:1px solid #dce6f1; border-radius:12px; background:#ffffff; box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
+    overflow-x:auto; white-space:nowrap;
+  }
+  .progress-inline-label{font-size:12px; font-weight:900; color:#5f7691; flex:0 0 auto}
+  .progress-inline-text{color:#000 !important; font-weight:900 !important; line-height:1.35}
+  .progress-inline-empty{color:#9badbe}
+  .subtle-head{display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap}
+  .subtle-head .title-text{font-size:15px; font-weight:900; color:#21415f}
+  .subtle-head .right-note{margin-left:auto; font-size:12px; color:#7a8ea7}
+  .shot-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding-top:4px}
+  .progress-input-line{display:grid; grid-template-columns:92px minmax(0,1fr); gap:10px; align-items:center}
+  .progress-input-line label{margin:0; font-size:13px; color:#4f6884}
+  .shot-text{font-size:13px; color:#4d6682; font-weight:800}
+  .update-inline{font-size:12px; color:#7a8ea7}
+  .foot-actions{display:flex; justify-content:flex-end; gap:10px; padding:0 18px 18px; flex-wrap:wrap}
+  .foot-actions .btn-danger{margin-right:auto}
+  
+  .seller-approve-date-input{width:62px !important; max-width:62px !important; min-width:62px !important; text-align:center}
+  .seller-approve-direct-btn{min-width:84px; padding:0 12px}
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child{
+    display:flex !important;
+    align-items:center !important;
+    gap:0.5cm !important;
+    flex-wrap:nowrap !important;
+  }
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child label{
+    flex:0 0 auto !important;
+    margin-right:2px !important;
+  }
+  .line-row[data-row="sellerApprove"] > .inline-field:nth-child(3){
+    margin-left:2cm !important;
+    width:calc(100% - 3cm) !important;
+    min-width:0 !important;
+  }
+  .line-row[data-row="sellerApprove"] > .inline-field:nth-child(3) .wide-inline{
+    width:100% !important;
+    max-width:calc(100% - 3cm) !important;
+    min-width:0 !important;
+  }
+
+  .invoice-row{
+    grid-template-columns:minmax(180px,220px) minmax(760px,1.8fr) 90px 180px;
+    align-items:center;
+    column-gap:12px;
+  }
+  .invoice-fields{
+    display:flex !important;
+    align-items:flex-start !important;
+    gap:12px !important;
+    width:100% !important;
+    min-width:0 !important;
+    flex-wrap:nowrap !important;
+  }
+  .invoice-fields .inline-field{
+    margin:0 !important;
+    min-width:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    gap:8px !important;
+    flex-wrap:nowrap !important;
+  }
+  .invoice-fields .inline-field label{
+    margin:0 !important;
+    white-space:nowrap !important;
+    flex:0 0 auto !important;
+    width:auto !important;
+    min-width:auto !important;
+    text-align:right !important;
+  }
+  .invoice-amount-block{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    min-width:0;
+    flex:0 0 132px;
+  }
+  .invoice-warning{
+    color:#d55252;
+    font-size:12px;
+    font-weight:900;
+    line-height:1.45;
+    min-height:18px;
+    text-align:left;
+    padding-left:68px;
+  }
+  .invoice-warning:empty::before{content:""; display:block; min-height:18px}
+  .invoice-amount-block input{
+    width:132px !important;
+    min-width:132px !important;
+    max-width:132px !important;
+  }
+
+  .amount-mismatch{color:#d55252}
+
+  .invoice-fields .inline-field:nth-child(2){
+    flex:0 0 auto !important;
+    margin-left:-0.5cm !important;
+  }
+  .invoice-fields .invoice-no-input{
+    width:2.2cm !important;
+    min-width:2.2cm !important;
+    max-width:2.2cm !important;
+  }
+  .invoice-fields .inline-field:nth-child(3){
+    flex:0 0 auto !important;
+    margin-left:-0.5cm !important;
+      margin-right:0.5cm !important;
+  }
+  .invoice-fields .invoice-date-input{
+    width:2.2cm !important;
+    min-width:2.2cm !important;
+    max-width:2.2cm !important;
+    text-align:center !important;
+  }
+  .invoice-note-field{
+    min-width:0 !important;
+    width:auto !important;
+    flex:1 1 auto !important;
+    margin-left:1cm !important;
+  }
+  .invoice-note-field .wide-inline{
+    width:100% !important;
+    max-width:none !important;
+    min-width:0 !important;
+  }
+
+  .closed-invoice-cell{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    line-height:1.35;
+    white-space:normal;
+  }
+  .closed-invoice-no{
+    font-weight:800;
+    color:#284a77;
+    word-break:break-word;
+  }
+  .closed-invoice-amt{
+    font-weight:900;
+    color:#35557d;
+  }
+
+  @media print{
+    .preview-actions,.topbar,.overlay{display:none !important}
+    .container{max-width:none; margin:0; padding:0}
+    .panel{box-shadow:none}
+  }
+
+  @media (max-width:1200px){
+    .preview-meta{grid-template-columns:repeat(2,minmax(160px,1fr))}
+    .grid-4,.grid-5,.grid-6{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .line-row,.line-row.no-note,.line-row.compact-buttons,.line-row.fee-inline,.line-row.method-inline,.line-row.date-inline,.line-row.invoice-row{grid-template-columns:1fr 140px 1fr 110px 1fr}
+    .invoice-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (max-width:1200px){
+    .filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .chip-row{width:100%; margin-left:0}
+  }
+  @media (max-width:860px){
+    .sync-body,.grid-2,.grid-3,.grid-4,.grid-5,.grid-6,.filters{grid-template-columns:1fr}
+    .line-row,.line-row.no-note,.line-row.compact-buttons,.line-row.fee-inline,.line-row.method-inline,.line-row.date-inline,.line-row.invoice-row{grid-template-columns:1fr}
+    .invoice-fields{grid-template-columns:1fr}
+    .line-update{padding-bottom:0}
+    .modal{width:100%}
+    .table-wrap table{min-width:1100px}
+  }
+
+/* ===== 美化 v1 ===== */
+html,body{
+  background:linear-gradient(180deg,#fbfcff 0%, #f5f8fc 56%, #eef3f9 100%);
+}
+body{
+  color:#23384f;
+}
+.topbar{
+  background:rgba(255,255,255,.95);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid #dfe8f2;
+  box-shadow:0 10px 28px rgba(19,43,73,.06);
+}
+.top-stripe{
+  height:6px;
+  background:linear-gradient(90deg,#7fa9ff 0%, #8fd6cb 34%, #ffd699 66%, #f1b7d0 100%);
+}
+.top-inner{padding:16px 22px 18px}
+.top-row{gap:12px}
+.title{color:#24486d; font-size:31px}
+.btn{
+  height:42px; padding:0 18px; border-radius:999px; font-weight:900;
+}
+.btn-primary{
+  background:linear-gradient(135deg,#3b79d8 0%, #5f95eb 100%);
+  color:#fff; box-shadow:0 10px 24px rgba(59,121,216,.18);
+}
+.btn-secondary{
+  background:#f4f8fd; color:#315784; border:1px solid #d8e4f1;
+}
+.btn-secondary:hover{background:#edf4fb}
+.chip-row{
+  margin-top:0; margin-left:auto; align-items:center; gap:14px;
+}
+.chip-inline{
+  font-size:13px; font-weight:800; color:#6f8197;
+}
+.chip-inline.sync{color:#4a6c95}
+
+.top-row{justify-content:space-between; gap:16px}
+.top-actions{margin-left:auto; display:flex; align-items:center; gap:14px; flex-wrap:wrap; justify-content:flex-end}
+.title{margin-right:0}
+.btn-primary{
+  background:linear-gradient(135deg,#d94a4a 0%, #ec6a6a 100%);
+  color:#fff; box-shadow:0 10px 24px rgba(217,74,74,.18);
+}
+.btn-primary:hover{box-shadow:0 12px 28px rgba(217,74,74,.24)}
+.btn-secondary{
+  background:#f7fbff; color:#315784; border:1px solid #d8e4f1;
+}
+.chip-row{
+  margin-top:0; margin-left:0; align-items:center; gap:12px; flex-wrap:wrap;
+}
+.chip-inline{font-size:13px; font-weight:800; color:#61788f}
+.chip-inline.saved{color:#1f8c68}
+.chip-inline.sync{color:#4a6c95}
+.panel-header{justify-content:space-between}
+.header-actions{margin-left:auto; display:flex; align-items:center; gap:10px}
+.ghost-btn{background:#ffffff; border:1px solid #d4e1f0; color:#2f638f}
+.ghost-btn:hover{background:#f5f9ff}
+.section-card{box-shadow:0 12px 26px rgba(24,52,87,.05)}
+.section-title{font-size:17px}
+.section-title.green{background:linear-gradient(180deg,#fbfffd 0%, #f2fbf7 100%)}
+.section-title.pink{background:linear-gradient(180deg,#fffafb 0%, #fff3f8 100%)}
+.section-title.gold{background:linear-gradient(180deg,#fffdf9 0%, #fff8ef 100%)}
+
+details.sync-box{
+  margin-top:14px; border:1px solid #dce6f1; background:#f8fbff;
+}
+details.sync-box > summary{font-weight:900; color:#355a83}
+.sync-body input{
+  border:1px solid #d7e2ef; background:#fff; color:#23384f;
+}
+.sync-body input::placeholder{color:#98a9ba}
+.container{max-width:1680px; margin:22px auto 36px}
+.panel{
+  border:1px solid #dfe7f1; border-radius:20px; box-shadow:0 14px 34px rgba(28,57,90,.07);
+}
+.panel-header{
+  background:linear-gradient(180deg,#ffffff 0%, #f6f9fe 100%);
+  border-bottom:1px solid #e4edf7;
+  padding:15px 18px;
+}
+.panel-header::before{width:6px; background:linear-gradient(180deg,#89b0ff 0%, #2f6fd6 100%)}
+.panel-header h2{color:#24405f}
+.count{
+  background:#eef5ff; color:#2f5fae; border:1px solid #dbe7ff;
+}
+.filters{
+  padding:10px; border:1px solid #e3ebf5; border-radius:16px;
+  background:linear-gradient(180deg,#fbfdff 0%, #f6f9fd 100%);
+}
+input, textarea, select{
+  border-radius:13px; border:1px solid #d5e1ef; box-shadow:inset 0 1px 0 rgba(255,255,255,.9);
+}
+.table-wrap{
+  border:1px solid #e3ebf5; border-radius:16px; background:#fff;
+}
+th{
+  background:#f4f8fd; color:#4c6786; letter-spacing:.2px;
+}
+tbody tr:hover td{background:#f5f9ff}
+.click-row.selected-row td{background:#eef5ff}
+.click-row.selected-row:hover td{background:#e7f0ff}
+.progress-table th,.progress-table td{text-align:center; vertical-align:middle}
+.expand-btn{
+  background:#edf4ff; color:#2a62c6; box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
+}
+.expand-btn:hover{background:#e2edff}
+.restore-btn{
+  border:1px solid #cfdced; background:#fff; color:#315d98;
+}
+.modal{
+  background:#f8fbff; border:1px solid rgba(216,227,240,.92); box-shadow:0 26px 70px rgba(10,27,49,.18);
+}
+.modal-head{
+  background:linear-gradient(135deg,#21486f 0%, #43779e 100%);
+}
+.modal-head .chip{background:rgba(255,255,255,.14)}
+#draftUpdatedText{display:none !important}
+.section-card{
+  border:1px solid #dce6f1; border-radius:20px; box-shadow:0 8px 22px rgba(18,45,77,.05);
+}
+.section-title{
+  background:linear-gradient(180deg,#fbfdff 0%, #f4f8fd 100%);
+  color:#24405f;
+}
+.section-title::before{width:6px}
+.line-row{
+  background:linear-gradient(180deg,#ffffff 0%, #fbfdff 100%);
+  border:1px solid #e4edf7;
+}
+.line-label{color:#22405f}
+.formula{color:#2483f1}
+.status-badge{box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+.status-badge.pending{background:#fff1f1; color:#d25555}
+.status-badge.done{background:#eef8f3; color:#1f8c68}
+.status-badge.gray{background:#f4f7fb; color:#677b90}
+.status-badge.amber{background:#fff7eb; color:#c98a2d}
+.small-action.primary{background:#edf4ff; color:#255dbb}
+.small-action.active,.state-btn.active{background:#2f6fd6; color:#fff; border-color:#2f6fd6}
+.state-btn{
+  border:1px solid #d8e3ef; background:#fff; color:#45627f;
+}
+.list-state.done,.list-state.pending,.list-state.amber{box-shadow:inset 0 1px 0 rgba(255,255,255,.85)}
+.list-state.done{background:#edf8f3; color:#167854; border-color:#cfeedd}
+.list-state.pending{background:#fff1f1; color:#c63f3f; border-color:#ffd9d9}
+.list-state.amber{background:#fff7ea; color:#b77718; border-color:#f2dfb3}
+.progress-inline-box{
+  background:#fff; border:1px solid #dce6f1; box-shadow:inset 0 1px 0 rgba(255,255,255,.88);
+}
+.btn-filter-toggle{
+  background:#fff1f1; color:#c64545; border:1px solid #ffd2d2;
+}
+.btn-filter-toggle.active{
+  background:#d84a4a; color:#fff; border-color:#d84a4a;
+}
+.foot-actions{padding-top:2px}
+  .progress-table th,.progress-table td{font-size:12px}
+  .progress-table .col-arrow{width:36px}
+  .progress-table .col-date{width:88px}
+  .progress-table .col-object{width:14%}
+  .progress-table .col-notary{width:96px}
+  .progress-table .col-agent{width:92px}
+  .progress-table .col-escrow{width:170px}
+  .progress-table .col-fee{width:118px}
+  .progress-table .col-company{width:108px}
+  .progress-table .col-updated{width:136px}
+  .progress-table .object-td,.progress-table .object-cell,.progress-table .notary-cell,.progress-table .agent-cell,.progress-table .escrow-td,.progress-table .dual-cell{min-width:0}
+  .progress-table .object-cell{display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; white-space:normal; word-break:break-word; text-align:left; margin:0 auto}
+  .progress-table .agent-cell,.progress-table .notary-cell{white-space:normal; line-height:1.35}
+  .progress-table .escrow-cell{display:block; width:100%; max-width:100%; white-space:nowrap; overflow:visible; text-overflow:clip; font-size:12px; letter-spacing:.2px}
+  .progress-table .dual-item{justify-content:center}
+  .progress-inline-row td{padding:0 6px 10px}
+  .progress-inline-box{max-width:none; width:100%; text-align:left; margin:0 auto}
+  .sticky-progress-line{margin-top:12px; display:grid; grid-template-columns:74px minmax(0,1fr); gap:12px; align-items:center; padding:10px 12px; border-radius:14px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18)}
+  .sticky-progress-line label{display:block; margin:0; color:#dbe9f8; font-size:13px; font-weight:900}
+  .sticky-progress-line input{height:40px; border-radius:12px; border:1px solid #d6e1ee; background:#fff; color:#27415e}
+  .chip{display:none !important}
+  .chip-inline.saved{background:none !important; border:none !important; padding:0 !important; color:#30a06f !important; font-weight:900}
+  .chip-inline.sync{background:none !important; border:none !important; padding:0 !important; color:#4a6c95 !important}
+  .top-actions{display:flex; align-items:center; gap:14px; margin-left:auto; flex-wrap:wrap; justify-content:flex-end}
+  .btn-primary{background:#d95050; color:#fff}
+  .btn-primary:hover{background:#c94444}
+  .btn-secondary{background:rgba(255,255,255,.10); color:#fff; border:1px solid rgba(255,255,255,.18)}
+  details.sync-box{margin-top:14px; border:1px solid #dce6f1; border-radius:16px; overflow:hidden; background:#f8fbff}
+  details.sync-box > summary{list-style:none; cursor:pointer; padding:12px 14px; font-weight:900; color:#2f567f}
+  details.sync-box > summary::-webkit-details-marker{display:none}
+  .sync-note{display:none !important}
+  .sync-body.sync-complete{padding:0 14px; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.35fr) auto; gap:10px; align-items:center}
+  .sync-body.sync-complete input{height:54px; background:#fff; color:#203957; border:1px solid #d7e4f2; border-radius:16px; padding:0 16px}
+  .sync-actions{display:flex; align-items:center; gap:10px}
+  .sync-btn{height:50px; padding:0 18px; border-radius:16px; border:1px solid #d9e4f1; background:#fff; color:#305887; font:inherit; font-weight:900; cursor:pointer}
+  .sync-btn.connect{background:#2f6fe4; color:#fff; border-color:#2f6fe4}
+  .sync-btn.danger{background:#fff1f1; color:#d44b4b; border-color:#ffd4d4}
+  .sync-status-row{display:flex; align-items:center; gap:12px; padding:14px 14px 16px}
+  .sync-pill{display:inline-flex; align-items:center; padding:8px 14px; border-radius:999px; font-size:12px; font-weight:900; background:#eef4f8; color:#6b7b8d}
+  .sync-pill.connected{background:#eaf7f0; color:#1f8a5f}
+  .sync-status-text{font-size:13px; color:#496885}
+  @media (max-width:1300px){
+    .sync-body.sync-complete{grid-template-columns:1fr; }
+    .sync-actions{justify-content:flex-start}
+  }
+
+@media (max-width:1200px){
+  .chip-row{margin-left:0; width:100%}
+}
+
+
+
+/* v55 修正 */
+#exportBtn{color:#24486d !important;}
+#exportBtn span{color:#24486d !important;}
+.panel-header{height:1cm; min-height:1cm; padding:0 18px; display:flex; align-items:center;}
+.panel-header h2{line-height:1;}
+
+
+/* ===== v56 調整 ===== */
+#exportBtn{
+  background:linear-gradient(135deg,#f2f7ff 0%, #dfeeff 100%) !important;
+  color:#23476f !important;
+  border:1px solid #bfd6f6 !important;
+  box-shadow:0 8px 18px rgba(46,98,158,.12);
+}
+#exportBtn:hover{
+  background:linear-gradient(135deg,#e8f2ff 0%, #d4e7ff 100%) !important;
+  color:#1f4166 !important;
+}
+.container > section.panel:nth-of-type(1) > .panel-header{
+  height:1cm;
+  min-height:1cm;
+  padding:0 18px;
+  display:flex;
+  align-items:center;
+  background:linear-gradient(180deg,#eef6ff 0%, #dfeeff 100%) !important;
+  border-bottom:1px solid #cfe0f5;
+}
+.container > section.panel:nth-of-type(1) > .panel-header::before{
+  background:linear-gradient(180deg,#6ea9ff 0%, #2f6fd6 100%) !important;
+}
+.container > section.panel:nth-of-type(1) > .panel-header h2{
+  color:#244f87 !important;
+}
+.container > section.panel:nth-of-type(1){
+  border-color:#d7e6f8;
+}
+.container > section.panel:nth-of-type(2) > .panel-header{
+  height:1cm;
+  min-height:1cm;
+  padding:0 18px;
+  display:flex;
+  align-items:center;
+  background:linear-gradient(180deg,#fff4f4 0%, #ffe6e6 100%) !important;
+  border-bottom:1px solid #f1d0d0;
+}
+.container > section.panel:nth-of-type(2) > .panel-header::before{
+  background:linear-gradient(180deg,#f08b8b 0%, #d55252 100%) !important;
+}
+.container > section.panel:nth-of-type(2) > .panel-header h2{
+  color:#9f3d3d !important;
+}
+.container > section.panel:nth-of-type(2){
+  border-color:#f0d8d8;
+}
+.modal-head{
+  background:linear-gradient(135deg,#f3f9ff 0%, #dbeeff 48%, #b8dcff 100%) !important;
+  color:#24486d !important;
+  border-bottom:1px solid #cfe0f2;
+}
+.modal-head h3{
+  color:#24486d !important;
+}
+.sticky-progress-line{
+  background:linear-gradient(180deg,#ffffff 0%, #f6faff 100%) !important;
+  border:1px solid #dbe7f3 !important;
+}
+.sticky-progress-line label{
+  color:#507094 !important;
+}
+#toggleIncompleteBtn{
+  background:linear-gradient(135deg,#fff3f3 0%, #ffe2e2 100%) !important;
+  color:#bf4747 !important;
+  border:1px solid #f4caca !important;
+}
+#closeModalBtn{
+  background:linear-gradient(135deg,#f6fbff 0%, #e8f1fb 100%) !important;
+  color:#24486d !important;
+  border:1px solid #d3e2f1 !important;
+}
+
+
+
+/* ===== v77 日期/配件/備註 對齊修正 ===== */
+.line-stack{gap:12px}
+.line-row{
+  align-items:center;
+  min-height:64px;
+}
+.line-row.date-inline{
+  grid-template-columns:minmax(190px,240px) 260px minmax(420px,1fr) 96px 170px;
+}
+.line-row.method-inline{
+  grid-template-columns:minmax(190px,240px) minmax(720px,1.8fr) 96px 170px;
+}
+.line-row.date-inline > .inline-field,
+.line-row.method-inline .inline-field{
+  margin:0;
+}
+.line-row.date-inline > .inline-field:first-of-type{
+  display:grid;
+  grid-template-columns:42px 98px 72px;
+  align-items:center;
+  column-gap:12px;
+  justify-content:start;
+}
+.line-row.date-inline > .inline-field:last-of-type{
+  display:grid;
+  grid-template-columns:42px minmax(280px,1fr);
+  align-items:center;
+  column-gap:12px;
+  width:100%;
+}
+.line-row.date-inline > .inline-field label,
+.line-row.method-inline .inline-field label{
+  margin:0;
+  white-space:nowrap;
+  text-align:right;
+}
+.line-row.date-inline > .inline-field .date-input{
+  width:112px;
+  min-width:112px;
+  max-width:112px;
+}
+.line-row.date-inline > .inline-field .small-action,
+.method-pack > .small-action{
+  width:auto;
+  min-width:0;
+  height:34px;
+  padding:0 16px;
+  margin:0;
+  justify-self:start;
+}
+.line-row.date-inline > .inline-field .wide-inline,
+.line-row.method-inline .inline-field .wide-inline{
+  width:100%;
+  min-width:0;
+}
+.method-pack{
+  display:grid;
+  grid-template-columns:max-content 72px minmax(320px,1fr);
+  align-items:center;
+  column-gap:16px;
+  width:100%;
+}
+.method-pack .state-group{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+.method-pack .inline-field{
+  display:grid;
+  grid-template-columns:42px minmax(280px,1fr);
+  align-items:center;
+  column-gap:12px;
+  width:100%;
+}
+.accessory-inline-btn{margin:0 0 0 28px; font-size:14px; width:auto; min-width:0; flex:0 0 auto; padding:0 16px; background:#ecf3ff; color:#255dbb}
+
+@media (max-width:1200px){
+  .line-row.date-inline,
+  .line-row.method-inline{
+    grid-template-columns:1fr;
+  }
+  .line-row.date-inline > .inline-field:first-of-type,
+  .line-row.date-inline > .inline-field:last-of-type,
+  .method-pack,
+  .method-pack .inline-field{
+    grid-template-columns:1fr;
+    row-gap:8px;
+  }
+  .line-row.date-inline > .inline-field label,
+  .line-row.method-inline .inline-field label{
+    text-align:left;
+  }
+}
+
+
+/* ===== v81 微調：配件左移 5px、備註框拉滿到完成區前 ===== */
+.line-row{
+  column-gap:14px !important;
+}
+.line-row.date-inline > .inline-field{
+  display:grid !important;
+  grid-template-columns:42px 98px auto !important;
+  align-items:center;
+  column-gap:12px !important;
+}
+.line-row.date-inline > .inline-field .date-input{
+  width:98px !important;
+  min-width:98px !important;
+  max-width:98px !important;
+}
+.line-row.date-inline > .inline-field button[data-toggle$="Accessory"],
+.line-row.date-inline > .inline-field .accessory-inline-btn{
+  justify-self:start;
+  margin-left:13px !important;
+  width:auto !important;
+  min-width:0 !important;
+  flex:0 0 auto !important;
+  padding:0 14px !important;
+  font-size:14px !important;
+}
+.line-row > .inline-field:nth-child(3){
+  width:100% !important;
+  min-width:0 !important;
+}
+.line-row > .inline-field:nth-child(3) input,
+.line-row > .inline-field:nth-child(3) textarea,
+.line-row > .inline-field:nth-child(3) select,
+.line-row > .inline-field:nth-child(3) .wide-inline{
+  width:100% !important;
+  min-width:0 !important;
+}
+
+
+
+/* ===== v82 微調：配件間距再留一點、備註框統一長度 ===== */
+.line-row.date-inline > .inline-field{
+  grid-template-columns:42px 98px auto !important;
+  column-gap:12px !important;
+}
+.line-row.date-inline > .inline-field .date-input{
+  width:98px !important;
+  min-width:98px !important;
+  max-width:98px !important;
+}
+.line-row.date-inline > .inline-field button[data-toggle$="Accessory"],
+.line-row.date-inline > .inline-field .accessory-inline-btn{
+  margin-left:8px !important;
+  padding:0 14px !important;
+  width:auto !important;
+  min-width:0 !important;
+  font-size:14px !important;
+}
+.line-row.date-inline > .inline-field:last-of-type,
+.method-pack .inline-field{
+  display:grid !important;
+  grid-template-columns:42px minmax(0,1fr) !important;
+  align-items:center !important;
+  column-gap:12px !important;
+  width:100% !important;
+  min-width:0 !important;
+}
+.line-row.date-inline > .inline-field:last-of-type .wide-inline,
+.method-pack .inline-field .wide-inline,
+.line-row input[id$="Note"]{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:none !important;
+}
+.method-pack{
+  grid-template-columns:max-content auto minmax(420px,1fr) !important;
+  column-gap:16px !important;
+  width:100% !important;
+}
+
+
+/* v85 只修正日期列的備註框長度，不動其他欄位設定 */
+.line-row.date-inline .inline-field:not(:has(.date-input)){
+  width:100% !important;
+  min-width:0 !important;
+}
+.line-row.date-inline .inline-field:not(:has(.date-input)) input,
+.line-row.date-inline .inline-field:not(:has(.date-input)) textarea{
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+  flex:1 1 auto !important;
+}
+.line-row.date-inline .inline-field:not(:has(.date-input)) .wide-inline,
+.line-row.date-inline .inline-field:not(:has(.date-input)) .small-input,
+.line-row.date-inline .inline-field:not(:has(.date-input)) .money-input{
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+}
+
+
+/* v87：只拉長備註框，不動前面日期/按鈕/完成區設定 */
+
+/* 日期列：只讓第3格備註欄在原本格子內吃滿 */
+.line-row.date-inline > .inline-field:nth-child(3){
+  width:100% !important;
+  min-width:0 !important;
+}
+.line-row.date-inline > .inline-field:nth-child(3) .wide-inline,
+.line-row.date-inline > .inline-field:nth-child(3) input,
+.line-row.date-inline > .inline-field:nth-child(3) textarea{
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+  flex:1 1 auto !important;
+}
+
+/* 出款方式列：只讓 method-pack 裡面的備註欄吃滿剩餘空間 */
+.line-row.method-inline .method-pack > .inline-field{
+  flex:1 1 auto !important;
+  min-width:0 !important;
+}
+.line-row.method-inline .method-pack > .inline-field .wide-inline,
+.line-row.method-inline .method-pack > .inline-field input,
+.line-row.method-inline .method-pack > .inline-field textarea{
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+  flex:1 1 auto !important;
+}
+
+
+/* v88：只延長備註框到完成區前，不動前面日期/按鈕設定 */
+
+/* 所有 line-row 內，備註那格本身不要被內容寬度卡住 */
+.line-row > .inline-field:nth-child(3),
+.line-row > .inline-field:nth-child(4){
+  min-width:0 !important;
+}
+
+/* 日期列：第 3 格就是備註，直接吃滿到更新/完成區前 */
+.line-row.date-inline > .inline-field:nth-child(3){
+  display:flex !important;
+  align-items:center !important;
+  gap:0 !important;
+  width:100% !important;
+  min-width:0 !important;
+}
+.line-row.date-inline > .inline-field:nth-child(3) label{
+  flex:0 0 42px !important;
+}
+.line-row.date-inline > .inline-field:nth-child(3) input,
+.line-row.date-inline > .inline-field:nth-child(3) textarea,
+.line-row.date-inline > .inline-field:nth-child(3) .wide-inline,
+.line-row.date-inline > .inline-field:nth-child(3) .small-input,
+.line-row.date-inline > .inline-field:nth-child(3) .money-input{
+  flex:1 1 auto !important;
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+}
+
+/* 出款方式列：method-pack 裡最後那個 inline-field 視為備註欄，吃滿剩餘寬度 */
+.line-row.method-inline .method-pack{
+  width:100% !important;
+  min-width:0 !important;
+}
+.line-row.method-inline .method-pack > .inline-field:last-child{
+  display:flex !important;
+  align-items:center !important;
+  gap:0 !important;
+  flex:1 1 auto !important;
+  width:100% !important;
+  min-width:0 !important;
+}
+.line-row.method-inline .method-pack > .inline-field:last-child label{
+  flex:0 0 42px !important;
+}
+.line-row.method-inline .method-pack > .inline-field:last-child input,
+.line-row.method-inline .method-pack > .inline-field:last-child textarea,
+.line-row.method-inline .method-pack > .inline-field:last-child .wide-inline,
+.line-row.method-inline .method-pack > .inline-field:last-child .small-input,
+.line-row.method-inline .method-pack > .inline-field:last-child .money-input{
+  flex:1 1 auto !important;
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+}
+
+/* 其他一般列：若第3格是備註，也一併吃滿原格 */
+.line-row:not(.date-inline):not(.method-inline) > .inline-field:nth-child(3){
+  display:flex !important;
+  align-items:center !important;
+  gap:0 !important;
+  width:100% !important;
+  min-width:0 !important;
+}
+.line-row:not(.date-inline):not(.method-inline) > .inline-field:nth-child(3) label{
+  flex:0 0 42px !important;
+}
+.line-row:not(.date-inline):not(.method-inline) > .inline-field:nth-child(3) input,
+.line-row:not(.date-inline):not(.method-inline) > .inline-field:nth-child(3) textarea,
+.line-row:not(.date-inline):not(.method-inline) > .inline-field:nth-child(3) .wide-inline,
+.line-row:not(.date-inline):not(.method-inline) > .inline-field:nth-child(3) .small-input,
+.line-row:not(.date-inline):not(.method-inline) > .inline-field:nth-child(3) .money-input{
+  flex:1 1 auto !important;
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+}
+
+
+/* v89：備註文字和框框之間留小空格，只動備註欄 */
+.line-row.date-inline > .inline-field:nth-child(3),
+.line-row.method-inline .method-pack > .inline-field:last-child,
+.line-row:not(.date-inline):not(.method-inline) > .inline-field:nth-child(3){
+  gap:8px !important;
+}
+
+
+/* v90：三列新增租件，右上新增全部按鈕 */
+.rentcase-btn{
+  height:34px;
+  padding:0 12px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  font-weight:900;
+  font-family:inherit;
+  white-space:nowrap;
+  line-height:34px;
+  text-align:center;
+  background:#ecf3ff;
+  color:#255dbb;
+  flex:0 0 auto;
+}
+.rentcase-btn.active{
+  background:#2f6fd6;
+  color:#fff;
+}
+#showAllBtn{
+  background:linear-gradient(135deg,#f6fbff 0%, #e8f1fb 100%);
+  color:#24486d;
+  border:1px solid #d3e2f1;
+}
+#showAllBtn:hover{
+  background:linear-gradient(135deg,#eef7ff 0%, #deedf9 100%);
+}
+
+
+/* v91：操作畫面右上新增全部；租件與配件並排且靠近日期框 */
+#modalShowAllBtn{
+  background:linear-gradient(135deg,#f6fbff 0%, #e8f1fb 100%);
+  color:#24486d;
+  border:1px solid #d3e2f1;
+}
+#modalShowAllBtn:hover{
+  background:linear-gradient(135deg,#eef7ff 0%, #deedf9 100%);
+}
+
+.rentcase-btn{
+  height:34px;
+  padding:0 12px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  font-weight:900;
+  font-family:inherit;
+  white-space:nowrap;
+  line-height:34px;
+  text-align:center;
+  background:#ecf3ff;
+  color:#255dbb;
+  flex:0 0 auto;
+  min-width:auto;
+  margin-left:0 !important;
+}
+.rentcase-btn.active{
+  background:#2f6fd6;
+  color:#fff;
+}
+
+/* 只調整有配件/租件的日期列，不動其他設定 */
+.line-row.date-inline .inline-field{
+  display:flex;
+  align-items:center;
+  flex-wrap:nowrap !important;
+}
+.line-row.date-inline .inline-field .date-input{
+  flex:0 0 auto;
+}
+.line-row.date-inline .inline-field > button.small-action.primary[data-toggle$="Accessory"]{
+  margin-left:19px !important; /* 約 0.5 公分 */
+  margin-right:8px !important;
+  width:auto !important;
+  min-width:auto !important;
+  padding:0 12px !important;
+  flex:0 0 auto !important;
+}
+.line-row.date-inline .inline-field > button.rentcase-btn{
+  margin-left:0 !important;
+  margin-right:0 !important;
+  flex:0 0 auto !important;
+}
+
+
+/* v92：日期框再加寬 5px */
+.date-input{
+  width: calc(9ch + 5px) !important;
+  max-width: calc(9ch + 5px) !important;
+  min-width: calc(9ch + 5px) !important;
+}
+.line-row .inline-field .date-input{
+  width: calc(9ch + 5px) !important;
+  max-width: calc(9ch + 5px) !important;
+  min-width: calc(9ch + 5px) !important;
+}
+
+
+/* v94：日期框、配件按鈕、租件按鈕之間各留約 0.5 公分空格 */
+.line-row.date-inline .inline-field{
+  display:flex !important;
+  align-items:center !important;
+  flex-wrap:nowrap !important;
+  gap:0 !important;
+}
+.line-row.date-inline .inline-field .date-input{
+  margin-right:0.5cm !important;
+}
+.line-row.date-inline .inline-field > button.small-action.primary[data-toggle$="Accessory"]{
+  margin-left:0 !important;
+  margin-right:0.5cm !important;
+  width:auto !important;
+  min-width:auto !important;
+  padding:0 12px !important;
+  flex:0 0 auto !important;
+}
+.line-row.date-inline .inline-field > button.rentcase-btn{
+  margin-left:0 !important;
+  margin-right:0 !important;
+  flex:0 0 auto !important;
+}
+
+
+/* v96：成交日期與預計點交日期再拉長 1 公分 */
+#f_dealDate,
+#f_handoverDate{
+  width: calc(9ch + 5px + 1cm) !important;
+  max-width: calc(9ch + 5px + 1cm) !important;
+  min-width: calc(9ch + 5px + 1cm) !important;
+}
+
+
+/* v99：代理人區塊的「備註」和輸入框距離縮短 */
+.proxy-inline{
+  grid-template-columns:96px 44px minmax(340px,1fr) !important;
+  column-gap:12px !important;
+}
+.proxy-note-label{
+  margin-left:0 !important;
+  justify-self:end;
+}
+
+
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child .state-group{
+    display:flex !important;
+    align-items:center !important;
+    gap:0.5cm !important;
+    flex-wrap:nowrap !important;
+  }
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child .small-action,
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child .state-btn,
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child .seller-approve-direct-btn,
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child .accessory-inline-btn{
+    margin:0 !important;
+  }
+
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child .state-group{
+    display:flex !important;
+    align-items:center !important;
+    gap:0.5cm !important;
+    flex-wrap:nowrap !important;
+  }
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child .seller-approve-direct-btn{order:1 !important;}
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child [data-toggle$="Rent"],
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child .rent-inline-btn{order:2 !important;}
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child [data-toggle$="Accessory"],
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child .accessory-inline-btn{order:3 !important;}
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child .small-action,
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child .state-btn,
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child .seller-approve-direct-btn,
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child .accessory-inline-btn{
+    margin:0 !important;
+  }
+
+  /* 發票區固定寬度 v12 */
+  .invoice-fields{
+    display:flex !important;
+    align-items:flex-start !important;
+    gap:0 !important;
+    width:100% !important;
+    min-width:0 !important;
+    flex-wrap:nowrap !important;
+  }
+  .invoice-amount-block{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:4px !important;
+    width:4.5cm !important;
+    min-width:4.5cm !important;
+    max-width:4.5cm !important;
+    flex:0 0 4.5cm !important;
+  }
+  .invoice-amount-block .inline-field{
+    display:flex !important;
+    align-items:center !important;
+    gap:0 !important;
+    width:4.5cm !important;
+    min-width:4.5cm !important;
+    max-width:4.5cm !important;
+  }
+  .invoice-amount-block .inline-field label{
+    width:2cm !important;
+    min-width:2cm !important;
+    max-width:2cm !important;
+    flex:0 0 2cm !important;
+    text-align:right !important;
+    margin:0 !important;
+  }
+  .invoice-amount-block input{
+    width:2.5cm !important;
+    min-width:2.5cm !important;
+    max-width:2.5cm !important;
+    flex:0 0 2.5cm !important;
+  }
+  .invoice-warning{
+    padding-left:2cm !important;
+  }
+
+  .invoice-fields .inline-field:nth-child(2){
+    display:flex !important;
+    align-items:center !important;
+    gap:0 !important;
+    width:5cm !important;
+    min-width:5cm !important;
+    max-width:5cm !important;
+    flex:0 0 5cm !important;
+    margin-left:0.5cm !important;
+    margin-right:0 !important;
+  }
+  .invoice-fields .inline-field:nth-child(2) label{
+    width:2cm !important;
+    min-width:2cm !important;
+    max-width:2cm !important;
+    flex:0 0 2cm !important;
+    text-align:right !important;
+    margin:0 !important;
+  }
+  .invoice-fields .invoice-no-input{
+    width:3cm !important;
+    min-width:3cm !important;
+    max-width:3cm !important;
+    flex:0 0 3cm !important;
+  }
+
+  .invoice-fields .inline-field:nth-child(3){
+    display:flex !important;
+    align-items:center !important;
+    gap:0 !important;
+    width:5cm !important;
+    min-width:5cm !important;
+    max-width:5cm !important;
+    flex:0 0 5cm !important;
+    margin-left:0.5cm !important;
+    margin-right:0 !important;
+  }
+  .invoice-fields .inline-field:nth-child(3) label{
+    width:2cm !important;
+    min-width:2cm !important;
+    max-width:2cm !important;
+    flex:0 0 2cm !important;
+    text-align:right !important;
+    margin:0 !important;
+  }
+  .invoice-fields .invoice-date-input{
+    width:3cm !important;
+    min-width:3cm !important;
+    max-width:3cm !important;
+    flex:0 0 3cm !important;
+    text-align:center !important;
+  }
+
+  .invoice-note-field{
+    min-width:0 !important;
+    width:auto !important;
+    flex:1 1 auto !important;
+    margin-left:0.5cm !important;
+    display:flex !important;
+    align-items:center !important;
+    gap:0 !important;
+  }
+  .invoice-note-field label{
+    width:2cm !important;
+    min-width:2cm !important;
+    max-width:2cm !important;
+    flex:0 0 2cm !important;
+    text-align:right !important;
+    margin:0 !important;
+  }
+  .invoice-note-field .wide-inline{
+    width:100% !important;
+    max-width:none !important;
+    min-width:0 !important;
+    flex:1 1 auto !important;
+  }
+
+
+  /* v13：改成真正用 cm 鎖定尺寸與間距 */
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child{
+    display:flex !important;
+    align-items:center !important;
+    flex-wrap:nowrap !important;
+    gap:0 !important;
+  }
+  .line-row[data-row="sellerApprove"] > .inline-field:first-child label{
+    margin:0 !important;
+    flex:0 0 auto !important;
+  }
+  .seller-approve-date-input{
+    width:2.2cm !important;
+    min-width:2.2cm !important;
+    max-width:2.2cm !important;
+    text-align:center !important;
+  }
+  .seller-approve-direct-btn,
+  .seller-approve-rent-btn,
+  .seller-approve-accessory-btn{
+    margin:0 !important;
+    flex:0 0 auto !important;
+  }
+  .seller-approve-direct-btn{margin-left:0.35cm !important;}
+  .seller-approve-rent-btn{margin-left:0.5cm !important;}
+  .seller-approve-accessory-btn{margin-left:0.5cm !important;}
+
+  .invoice-fields{
+    display:flex !important;
+    align-items:flex-start !important;
+    flex-wrap:nowrap !important;
+    gap:0 !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  .invoice-amount-block{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:4px !important;
+    width:4.5cm !important;
+    min-width:4.5cm !important;
+    max-width:4.5cm !important;
+    flex:0 0 4.5cm !important;
+  }
+  .invoice-amount-block .inline-field{
+    display:flex !important;
+    align-items:center !important;
+    gap:0 !important;
+    width:4.5cm !important;
+    min-width:4.5cm !important;
+    max-width:4.5cm !important;
+  }
+  .invoice-amount-block .inline-field label{
+    width:2cm !important;
+    min-width:2cm !important;
+    max-width:2cm !important;
+    flex:0 0 2cm !important;
+    margin:0 !important;
+    text-align:right !important;
+  }
+  .invoice-amount-block input{
+    width:2.5cm !important;
+    min-width:2.5cm !important;
+    max-width:2.5cm !important;
+    flex:0 0 2.5cm !important;
+  }
+  .invoice-warning{
+    padding-left:2cm !important;
+  }
+
+  .invoice-fields .inline-field:nth-child(2){
+    display:flex !important;
+    align-items:center !important;
+    gap:0 !important;
+    width:5cm !important;
+    min-width:5cm !important;
+    max-width:5cm !important;
+    flex:0 0 5cm !important;
+    margin-left:0.5cm !important;
+    margin-right:0 !important;
+  }
+  .invoice-fields .inline-field:nth-child(2) label{
+    width:2cm !important;
+    min-width:2cm !important;
+    max-width:2cm !important;
+    flex:0 0 2cm !important;
+    margin:0 !important;
+    text-align:right !important;
+  }
+  .invoice-fields .invoice-no-input{
+    width:3cm !important;
+    min-width:3cm !important;
+    max-width:3cm !important;
+    flex:0 0 3cm !important;
+  }
+
+  .invoice-fields .inline-field:nth-child(3){
+    display:flex !important;
+    align-items:center !important;
+    gap:0 !important;
+    width:5cm !important;
+    min-width:5cm !important;
+    max-width:5cm !important;
+    flex:0 0 5cm !important;
+    margin-left:0.5cm !important;
+    margin-right:0 !important;
+  }
+  .invoice-fields .inline-field:nth-child(3) label{
+    width:2cm !important;
+    min-width:2cm !important;
+    max-width:2cm !important;
+    flex:0 0 2cm !important;
+    margin:0 !important;
+    text-align:right !important;
+  }
+  .invoice-fields .invoice-date-input{
+    width:3cm !important;
+    min-width:3cm !important;
+    max-width:3cm !important;
+    flex:0 0 3cm !important;
+    text-align:center !important;
+  }
+
+  .invoice-note-field{
+    display:flex !important;
+    align-items:center !important;
+    gap:0 !important;
+    min-width:0 !important;
+    flex:1 1 auto !important;
+    margin-left:0.5cm !important;
+  }
+  .invoice-note-field label{
+    width:2cm !important;
+    min-width:2cm !important;
+    max-width:2cm !important;
+    flex:0 0 2cm !important;
+    margin:0 !important;
+    text-align:right !important;
+  }
+  .invoice-note-field .wide-inline{
+    flex:1 1 auto !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="top-stripe"></div>
+    <div class="top-inner">
+      <div class="top-row">
+        <div class="title">成交進度</div>
+        <div class="top-actions">
+          <button class="btn btn-primary" id="addCaseBtn" type="button">新增案件</button>
+          <button class="btn btn-secondary" id="exportBtn" type="button">匯出Excel</button>
+          <div class="chip-row">
+            <span class="chip-inline saved">已自動存檔</span>
+            <span class="chip-inline sync" id="topSyncText">最後同步時間：2026/03/31 00:58</span>
+          </div>
+        </div>
+      </div>
+      <details class="sync-box">
+        <summary>雲端同步設定（設定隱藏）</summary>
+                <div class="sync-body sync-complete">
+          <input id="syncUrl" placeholder="Project URL" />
+          <input id="syncKey" placeholder="Publishable Key" />
+          <div class="sync-actions">
+            <button class="sync-btn connect" id="connectSyncBtn" type="button">連線</button>
+            <button class="sync-btn" id="syncNowBtn" type="button">立即同步</button>
+            <button class="sync-btn danger" id="disconnectSyncBtn" type="button">中斷</button>
+          </div>
+        </div>
+        <div class="sync-status-row">
+          <span class="sync-pill" id="syncStatusPill">未連線</span>
+          <span class="sync-status-text" id="syncStatusText">尚未連線雲端。</span>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="container">
+    
+<section class="panel">
+      <div class="panel-header">
+        <h2>雙方出款完成等結案</h2>
+        <span class="count" id="waitingCloseCount">0 筆</span>
+      </div>
+      <div class="panel-body">
+        <div class="table-wrap waiting-close-scroll">
+          <table class="progress-table">
+            <thead>
+              <tr>
+                <th class="col-arrow"></th>
+                <th class="col-date">預計點交</th>
+                <th class="col-date">成交日期</th>
+                <th class="col-object">物件</th>
+                <th class="col-notary">代書</th>
+                <th class="col-escrow">履保帳號</th>
+                <th class="col-agent">開發業務</th>
+                <th class="col-fee">賣方服務費<span class="th-sub">申請賣方服務費</span></th>
+                <th class="col-company">賣服入帳公司</th>
+                <th class="col-agent">銷售業務</th>
+                <th class="col-fee">買方服務費<span class="th-sub">買方收款方式</span></th>
+                <th class="col-company">買服入帳公司</th>
+                <th class="col-updated">最後更新時間</th>
+              </tr>
+            </thead>
+            <tbody id="waitingCloseBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    
+
+    
+<section class="panel">
+      <div class="panel-header">
+        <h2>進行中列表</h2>
+        <div class="header-actions">
+          <span class="count" id="progressCount">0 筆</span>
+          <button class="ghost-btn" id="expandAllProgressBtn" type="button">展開</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="filters progress-filters">
+          <select id="progressFilter" class="filter-select">
+            <option value="all">全部案件</option>
+            <option value="sellerNotApplied">賣方服務費尚未申請</option>
+            <option value="sellerNotPaid">賣方服務費尚未出款</option>
+            <option value="buyerNotEscrow">買方服務費尚未入履保</option>
+            <option value="buyerNotCompany">買方服務費尚未入公司</option>
+          </select>
+          <input id="progressSearchObject" placeholder="搜尋物件" />
+          <input id="progressSearchNotary" placeholder="搜尋代書" />
+          <input id="progressSearchAgent" placeholder="搜尋業務名字" />
+          <input id="progressSearchEscrow" placeholder="搜尋履保帳號" />
+          <input id="progressSearchAmount" placeholder="搜尋金額" />
+          <button class="ghost-btn clear-btn" id="progressClearBtn" type="button">清除篩選</button>
+        </div>
+        <div class="table-wrap">
+          <table class="progress-table">
+            <thead>
+              <tr>
+                <th class="col-arrow"></th>
+                <th class="col-date">預計點交</th>
+                <th class="col-date">成交日期</th>
+                <th class="col-object">物件</th>
+                <th class="col-notary">代書</th>
+                <th class="col-escrow">履保帳號</th>
+                <th class="col-agent">開發業務</th>
+                <th class="col-fee">賣方服務費<span class="th-sub">申請賣方服務費</span></th>
+                <th class="col-company">賣服入帳公司</th>
+                <th class="col-agent">銷售業務</th>
+                <th class="col-fee">買方服務費<span class="th-sub">買方收款方式</span></th>
+                <th class="col-company">買服入帳公司</th>
+                <th class="col-updated">最後更新時間</th>
+              </tr>
+            </thead>
+            <tbody id="progressBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+
+
+<section class="panel">
+      <div class="panel-header">
+        <h2>已結案</h2>
+        <span class="count" id="closedCount">0 筆</span>
+      </div>
+      <div class="panel-body">
+        <div class="filters progress-filters">
+          <input id="closedSearchObject" placeholder="搜尋物件" />
+          <input id="closedSearchNotary" placeholder="搜尋代書" />
+          <input id="closedSearchAgent" placeholder="搜尋業務名字" />
+          <input id="closedSearchEscrow" placeholder="搜尋履保帳號" />
+          <input id="closedSearchAmount" placeholder="搜尋金額" />
+          <button class="ghost-btn clear-btn" id="closedClearBtn" type="button">清除篩選</button>
+        </div>
+        <div class="table-wrap closed-scroll">
+          <table class="progress-table">
+            <colgroup>
+              <col class="col-date">
+              <col class="col-date">
+              <col class="col-object">
+              <col class="col-notary">
+              <col class="col-agent">
+              <col class="col-agent">
+              <col class="col-escrow">
+              <col style="width:150px">
+              <col style="width:150px">
+              <col class="col-updated">
+              <col style="width:80px">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>結案日期</th>
+                <th>成交日期</th>
+                <th>物件</th>
+                <th>代書</th>
+                <th>開發業務</th>
+                <th>銷售業務</th>
+                <th>履保帳號</th>
+                <th>賣方發票</th>
+                <th>買方發票</th>
+                <th>最後更新時間</th>
+                <th>恢復</th>
+              </tr>
+            </thead>
+            <tbody id="closedBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-head-top">
+          <h3 id="modalTitle">新增案件</h3>
+          <div class="meta">
+            <button class="btn btn-filter-toggle" id="toggleIncompleteBtn" type="button">未做</button>
+            <button class="btn btn-secondary" id="modalShowAllBtn" type="button">全部</button>
+            <button class="btn close-btn" id="closeModalBtn" type="button">關閉</button>
+          </div>
+        </div>
+        <div class="object-live" id="objectLiveTitle">目前物件：未命名</div>
+        <div class="sticky-progress-line">
+          <label>目前進度</label>
+          <input id="f_caseProgress" placeholder="輸入目前進度" />
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="section-card">
+          <div class="section-title">基本資料</div>
+          <div class="section-body">
+            <div class="grid grid-4 basic-top-grid">
+              <div class="field"><label>物件</label><input id="f_object" /></div>
+              <div class="field"><label class="basic-label-red">成交日期</label><input class="date-input" id="f_dealDate" placeholder="3/13 → 115/3/13" /></div>
+              <div class="field"><label class="basic-label-blue">預計點交日期</label><input class="date-input" id="f_handoverDate" placeholder="3/13 → 115/3/13" /></div>
+              <div class="field"><label>成交總價（萬）</label><input class="money-input" id="f_totalPriceWan" inputmode="decimal" /></div>
+            </div>
+            <div class="grid grid-4" style="margin-top:12px">
+              <div class="field"><label>主約編號</label><input id="f_mainContract" /></div>
+              <div class="field"><label>履保帳號</label><input id="f_escrowAccount" /></div>
+              <div class="field"><label>簽約代書</label><input id="f_notary" /></div>
+              <div class="field"><label>承辦代書助理</label><input id="f_notaryAssistant" /></div>
+            </div>
+            <div class="grid grid-2" style="margin-top:12px">
+              <div class="field"><label>開發業務</label><input id="f_devAgent" placeholder="多人建議用、分隔" /></div>
+              <div class="field"><label>銷售業務</label><input id="f_saleAgent" placeholder="多人建議用、分隔" /></div>
+            </div>
+            <div class="grid grid-2" style="margin-top:12px">
+              <div class="field"><label>賣方姓名</label><input id="f_sellerName" /></div>
+              <div class="field"><label>賣方代理人</label><div class="proxy-inline"><button class="small-action" type="button" data-toggle="sellerProxyNone">無</button><span class="proxy-note-label">備註</span><input id="f_sellerProxy" placeholder="" /></div></div>
+            </div>
+            <div class="grid grid-2" style="margin-top:12px">
+              <div class="field"><label>買方姓名</label><input id="f_buyerName" /></div>
+              <div class="field"><label>買方代理人</label><div class="proxy-inline"><button class="small-action" type="button" data-toggle="buyerProxyNone">無</button><span class="proxy-note-label">備註</span><input id="f_buyerProxy" placeholder="" /></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-title green">台慶流程</div>
+          <div class="section-body">
+            <div class="line-stack">
+              <div class="line-row date-inline" data-row="bossCheck">
+                <div class="line-label">1. 跟王總確認台慶業績</div>
+                <div class="inline-field"><label>日期</label><input class="date-input" id="f_bossCheckDate" placeholder="3/13" /><button class="small-action primary" type="button" data-toggle="bossCheckNone">無</button></div>
+                <div class="inline-field"><label>備註</label><input id="f_bossCheckNote" class="wide-inline" /></div>
+                <div><span class="status-badge pending" id="status_bossCheck">未做</span></div>
+                <div class="line-update" id="updated_bossCheck">最後更新：--</div>
+              </div>
+
+              <div class="line-row date-inline" data-row="reportPerformance">
+                <div class="line-label">2. 申報台慶業績</div>
+                <div class="inline-field"><label>日期</label><input class="date-input" id="f_reportPerformanceDate" placeholder="3/13" /></div>
+                <div class="inline-field"><label>備註</label><input id="f_reportPerformanceNote" class="wide-inline" /></div>
+                <div><span class="status-badge pending" id="status_reportPerformance">未做</span></div>
+                <div class="line-update" id="updated_reportPerformance">最後更新：--</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        
+        <div class="section-card">
+          <div class="section-title pink">賣方</div>
+          <div class="section-body">
+            <div class="line-stack">
+              <div class="line-row fee-inline" data-row="sellerFeeConfirm">
+                <div class="line-label">1. 賣方服務費確認單</div>
+                <div class="inline-field"><label>%</label><input class="small-input" id="f_sellerFeePercent" inputmode="decimal" placeholder="4 或 4%" /></div>
+                <div class="inline-field"><label>金額</label><input class="small-input" id="f_sellerFeeAmount" inputmode="text" placeholder="640000 或 64萬" /></div>
+                <div class="formula" id="sellerFeeFormula">總價0萬*0.00%= $0</div>
+                <div><span class="status-badge pending" id="status_sellerFeeConfirm">未做</span></div>
+                <div class="line-update" id="updated_sellerFeeConfirm">最後更新：--</div>
+              </div>
+
+              <div class="line-row date-inline" data-row="sellerApprove">
+                <div class="line-label">2. 回報王總申請賣方出款</div>
+                <div class="inline-field"><label>日期</label><input class="date-input seller-approve-date-input" id="f_sellerApproveDate" placeholder="3/13" /><button class="small-action primary seller-approve-direct-btn" type="button" data-toggle="sellerApproveDirect">直接申請</button><button class="rentcase-btn seller-approve-rent-btn" type="button" data-toggle="sellerApproveRent">租件</button><button class="small-action primary seller-approve-accessory-btn" type="button" data-toggle="sellerApproveAccessory">配件</button></div>
+                <div class="inline-field"><label>備註</label><input id="f_sellerApproveNote" class="wide-inline" /></div>
+                <div><span class="status-badge pending" id="status_sellerApprove">未做</span></div>
+                <div class="line-update" id="updated_sellerApprove">最後更新：--</div>
+              </div>
+
+              <div class="line-row method-inline" data-row="sellerPayout">
+                <div class="line-label">3. 賣方出款方式</div>
+                <div class="method-pack">
+                  <div class="state-group">
+                    <button class="state-btn" type="button" data-state="sellerPayoutMethod" data-value="履保">履保</button>
+                    <button class="state-btn" type="button" data-state="sellerPayoutMethod" data-value="收現">收現</button>
+                    <button class="state-btn" type="button" data-state="sellerPayoutMethod" data-value="匯入公司">匯入公司</button>
+                  </div>
+                  <button class="small-action primary accessory-inline-btn" type="button" data-toggle="sellerPayoutAccessory">配件</button>
+                  <div class="inline-field"><label>備註</label><input id="f_sellerPayoutNote" class="wide-inline" /></div>
+                </div>
+                <div><span class="status-badge pending" id="status_sellerPayout">未做</span></div>
+                <div class="line-update" id="updated_sellerPayout">最後更新：--</div>
+                <input id="f_sellerPayoutMethod" type="hidden" />
+              </div>
+
+              <div class="line-row date-inline" data-row="sellerEscrowUpload">
+                <div class="line-label">4. 賣服單上傳履保</div>
+                <div class="inline-field"><label>日期</label><input class="date-input" id="f_sellerEscrowUploadDate" placeholder="3/13" /><button class="small-action primary" type="button" data-toggle="sellerEscrowUploadAccessory">配件</button><button class="rentcase-btn" type="button" data-toggle="sellerEscrowUploadRent">租件</button></div>
+                <div class="inline-field"><label>備註</label><input id="f_sellerEscrowUploadNote" class="wide-inline" /></div>
+                <div><span class="status-badge pending" id="status_sellerEscrowUpload">未做</span></div>
+                <div class="line-update" id="updated_sellerEscrowUpload">最後更新：--</div>
+              </div>
+
+              <div class="line-row date-inline" data-row="sellerPayment">
+                <div class="line-label">5. 賣服入帳公司日期</div>
+                <div class="inline-field"><label>日期</label><input class="date-input" id="f_sellerPaymentDate" placeholder="3/13" /><button class="small-action primary" type="button" data-toggle="sellerPaymentAccessory">配件</button></div>
+                <div class="inline-field"><label>備註</label><input id="f_sellerPaymentNote" class="wide-inline" /></div>
+                <div><span class="status-badge pending" id="status_sellerPayment">未做</span></div>
+                <div class="line-update" id="updated_sellerPayment">最後更新：--</div>
+              </div>
+
+              <div class="line-row date-inline" data-row="sellerShot">
+                <div class="line-label">6. 賣方入款截圖</div>
+                <div class="inline-field"><label>日期</label><input class="date-input" id="f_sellerShotDate" placeholder="3/13" /><button class="small-action primary" type="button" data-toggle="sellerShotAccessory">配件</button></div>
+                <div class="inline-field"><label>備註</label><input id="f_sellerShotNote" class="wide-inline" /></div>
+                <div><span class="status-badge pending" id="status_sellerShot">未做</span></div>
+                <div class="line-update" id="updated_sellerShot">最後更新：--</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        
+        <div class="section-card">
+          <div class="section-title gold">買方</div>
+          <div class="section-body">
+            <div class="line-stack">
+              <div class="line-row fee-inline" data-row="buyerFeeConfirm">
+                <div class="line-label">1. 買方服務費確認單</div>
+                <div class="inline-field"><label>%</label><input class="small-input" id="f_buyerFeePercent" inputmode="decimal" placeholder="4 或 4%" /></div>
+                <div class="inline-field"><label>金額</label><input class="small-input" id="f_buyerFeeAmount" inputmode="text" placeholder="640000 或 64萬" /></div>
+                <div class="formula" id="buyerFeeFormula">總價0萬*0.00%= $0</div>
+                <div><span class="status-badge pending" id="status_buyerFeeConfirm">未做</span></div>
+                <div class="line-update" id="updated_buyerFeeConfirm">最後更新：--</div>
+              </div>
+
+              <div class="line-row method-inline" data-row="buyerPayout">
+                <div class="line-label">2. 買方收款方式</div>
+                <div class="method-pack">
+                  <div class="state-group">
+                    <button class="state-btn" type="button" data-state="buyerPayoutMethod" data-value="預計匯入履保">預計入履保</button>
+                    <button class="state-btn" type="button" data-state="buyerPayoutMethod" data-value="預計收現金">預計收現金</button>
+                    <button class="state-btn" type="button" data-state="buyerPayoutMethod" data-value="預計匯款公司">預計匯款公司</button>
+                  </div>
+                  <button class="small-action primary" type="button" data-toggle="buyerPayoutAccessory">配件</button>
+                  <div class="inline-field"><label>備註</label><input id="f_buyerPayoutNote" class="wide-inline" /></div>
+                </div>
+                <div><span class="status-badge pending" id="status_buyerPayout">未做</span></div>
+                <div class="line-update" id="updated_buyerPayout">最後更新：--</div>
+                <input id="f_buyerPayoutMethod" type="hidden" />
+              </div>
+
+              <div class="line-row date-inline" data-row="buyerEscrowUpload">
+                <div class="line-label">3. 買服單上傳履保</div>
+                <div class="inline-field"><label>日期</label><input class="date-input" id="f_buyerEscrowUploadDate" placeholder="3/13" /><button class="small-action primary" type="button" data-toggle="buyerEscrowUploadAccessory">配件</button><button class="rentcase-btn" type="button" data-toggle="buyerEscrowUploadRent">租件</button></div>
+                <div class="inline-field"><label>備註</label><input id="f_buyerEscrowUploadNote" class="wide-inline" /></div>
+                <div><span class="status-badge pending" id="status_buyerEscrowUpload">未做</span></div>
+                <div class="line-update" id="updated_buyerEscrowUpload">最後更新：--</div>
+              </div>
+
+              <div class="line-row date-inline" data-row="buyerPayment">
+                <div class="line-label">4. 買服入帳公司日期</div>
+                <div class="inline-field"><label>日期</label><input class="date-input" id="f_buyerPaymentDate" placeholder="3/13" /><button class="small-action primary" type="button" data-toggle="buyerPaymentAccessory">配件</button></div>
+                <div class="inline-field"><label>備註</label><input id="f_buyerPaymentNote" class="wide-inline" /></div>
+                <div><span class="status-badge pending" id="status_buyerPayment">未做</span></div>
+                <div class="line-update" id="updated_buyerPayment">最後更新：--</div>
+              </div>
+
+              <div class="line-row date-inline" data-row="buyerShot">
+                <div class="line-label">5. 買方入款截圖</div>
+                <div class="inline-field"><label>日期</label><input class="date-input" id="f_buyerShotDate" placeholder="3/13" /><button class="small-action primary" type="button" data-toggle="buyerShotAccessory">配件</button></div>
+                <div class="inline-field"><label>備註</label><input id="f_buyerShotNote" class="wide-inline" /></div>
+                <div><span class="status-badge pending" id="status_buyerShot">未做</span></div>
+                <div class="line-update" id="updated_buyerShot">最後更新：--</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="section-card">
+          <div class="section-title">業績確認與列印</div>
+          <div class="section-body">
+            <div class="line-stack">
+              <div class="line-row date-inline" data-row="devConfirm">
+                <div class="line-label">開發業務確認業績日期</div>
+                <div class="inline-field"><label>日期</label><input class="date-input" id="f_devConfirmDate" placeholder="3/13" /><button class="small-action primary" type="button" data-toggle="devConfirmAccessory">配件</button></div>
+                <div class="inline-field"><label>備註</label><input id="f_devConfirmNote" class="wide-inline" /></div>
+                <div><span class="status-badge pending" id="status_devConfirm">未做</span></div>
+                <div class="line-update" id="updated_devConfirm">最後更新：--</div>
+              </div>
+              <div class="line-row date-inline" data-row="saleConfirm">
+                <div class="line-label">銷售業務確認業績日期</div>
+                <div class="inline-field"><label>日期</label><input class="date-input" id="f_saleConfirmDate" placeholder="3/13" /><button class="small-action primary" type="button" data-toggle="saleConfirmAccessory">配件</button></div>
+                <div class="inline-field"><label>備註</label><input id="f_saleConfirmNote" class="wide-inline" /></div>
+                <div><span class="status-badge pending" id="status_saleConfirm">未做</span></div>
+                <div class="line-update" id="updated_saleConfirm">最後更新：--</div>
+              </div>
+              <div class="line-row compact-buttons" data-row="splitSheet">
+                <div class="line-label">拆帳表列印</div>
+                <div><button class="small-action primary" type="button" data-toggle="splitSheet">完成</button></div>
+                <div class="inline-field"><label>備註</label><input id="f_splitSheetNote" class="wide-inline" /></div>
+                <div><span class="status-badge pending" id="status_splitSheet">未做</span></div>
+                <div class="line-update" id="updated_splitSheet">最後更新：--</div>
+              </div>
+              <div class="line-row compact-buttons" data-row="voucherPrint">
+                <div class="line-label">介紹金傳票列印</div>
+                <div class="state-group">
+                  <button class="state-btn" type="button" data-state="voucherPrint" data-value="已列印">已列印</button>
+                  <button class="state-btn" type="button" data-state="voucherPrint" data-value="無">無</button>
+                </div>
+                <div></div>
+                <div><span class="status-badge pending" id="status_voucherPrint">未做</span></div>
+                <div class="line-update" id="updated_voucherPrint">最後更新：--</div>
+                <input id="f_voucherPrintState" type="hidden" />
+              </div>
+
+              <div class="line-row date-inline" data-row="closeCase">
+                <div class="line-label">結案</div>
+                <div class="inline-field"><label>日期</label><input class="date-input" id="f_closeDate" placeholder="3/13" /></div>
+                <div class="inline-field"><label>備註</label><input id="f_closeNote" class="wide-inline" /></div>
+                <div><span class="status-badge pending" id="status_closeCase">未做</span></div>
+                <div class="line-update" id="updated_closeCase">最後更新：--</div>
+              </div>
+              <div class="line-row invoice-row" data-row="sellerInvoice">
+                <div class="line-label">賣方發票</div>
+                <div class="invoice-fields">
+                  <div class="invoice-amount-block">
+                    <div class="inline-field"><label>發票金額</label><input class="small-input" id="f_sellerInvoiceAmount" inputmode="text" placeholder="640000 或 64萬" /></div>
+                    <div class="invoice-warning" id="warn_sellerInvoice"></div>
+                  </div>
+                  <div class="inline-field"><label>發票號碼</label><input id="f_sellerInvoiceNo" class="wide-inline invoice-no-input" placeholder="AB12345678" /></div>
+                  <div class="inline-field"><label>發票日期</label><input class="date-input invoice-date-input" id="f_sellerInvoiceDate" placeholder="3/13" /></div>
+                  <div class="inline-field invoice-note-field"><label>備註</label><input id="f_sellerInvoiceNote" class="wide-inline" /></div>
+                </div>
+                <div><span class="status-badge pending" id="status_sellerInvoice">未做</span></div>
+                <div class="line-update" id="updated_sellerInvoice">最後更新：--</div>
+              </div>
+              <div class="line-row invoice-row" data-row="buyerInvoice">
+                <div class="line-label">買方發票</div>
+                <div class="invoice-fields">
+                  <div class="invoice-amount-block">
+                    <div class="inline-field"><label>發票金額</label><input class="small-input" id="f_buyerInvoiceAmount" inputmode="text" placeholder="640000 或 64萬" /></div>
+                    <div class="invoice-warning" id="warn_buyerInvoice"></div>
+                  </div>
+                  <div class="inline-field"><label>發票號碼</label><input id="f_buyerInvoiceNo" class="wide-inline invoice-no-input" placeholder="AB12345678" /></div>
+                  <div class="inline-field"><label>發票日期</label><input class="date-input invoice-date-input" id="f_buyerInvoiceDate" placeholder="3/13" /></div>
+                  <div class="inline-field invoice-note-field"><label>備註</label><input id="f_buyerInvoiceNote" class="wide-inline" /></div>
+                </div>
+                <div><span class="status-badge pending" id="status_buyerInvoice">未做</span></div>
+                <div class="line-update" id="updated_buyerInvoice">最後更新：--</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="foot-actions">
+        <button class="btn btn-danger" id="deleteBtn" type="button">刪除</button>
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script>
+(() => {
+  const STORAGE_KEY = 'deal_progress_cases_v8_beautify';
+  const DRAFT_KEY = 'deal_progress_draft_v8_beautify';
+  const META_KEY = 'deal_progress_last_cloud_sync_v11';
+  const LOCAL_SAVE_KEY = 'deal_progress_last_local_save_v1';
+  const LOCAL_EPOCH_KEY = 'deal_progress_last_local_epoch_v1';
+  const SYNC_META_KEY = 'deal_progress_sync_panel_v2';
+  const SYNC_TABLE = 'deal_progress_state';
+  const SYNC_WORKSPACE = 'default';
+  const ROC_YEAR_DEFAULT = 115;
+
+  const overlay = document.getElementById('overlay');
+  const modalTitle = document.getElementById('modalTitle');
+  const draftUpdatedText = document.getElementById('draftUpdatedText');
+  const toggleIncompleteBtn = document.getElementById('toggleIncompleteBtn');
+  const objectLiveTitle = document.getElementById('objectLiveTitle');
+  const progressBody = document.getElementById('progressBody');
+  const waitingCloseBody = document.getElementById('waitingCloseBody');
+    const closedBody = document.getElementById('closedBody');
+  const progressSearchObject = document.getElementById('progressSearchObject');
+  const progressSearchNotary = document.getElementById('progressSearchNotary');
+  const progressSearchAgent = document.getElementById('progressSearchAgent');
+  const progressSearchEscrow = document.getElementById('progressSearchEscrow');
+  const progressSearchAmount = document.getElementById('progressSearchAmount');
+  const progressFilter = document.getElementById('progressFilter');
+  const progressClearBtn = document.getElementById('progressClearBtn');
+  const progressCount = document.getElementById('progressCount');
+  const expandAllProgressBtn = document.getElementById('expandAllProgressBtn');
+  const closedSearchObject = document.getElementById('closedSearchObject');
+  const closedSearchNotary = document.getElementById('closedSearchNotary');
+  const closedSearchAgent = document.getElementById('closedSearchAgent');
+  const closedSearchEscrow = document.getElementById('closedSearchEscrow');
+  const closedSearchAmount = document.getElementById('closedSearchAmount');
+  const closedClearBtn = document.getElementById('closedClearBtn');
+  const waitingCloseCount = document.getElementById('waitingCloseCount');
+  const closedCount = document.getElementById('closedCount');
+  const topSyncText = document.getElementById('topSyncText');
+  const syncUrl = document.getElementById('syncUrl');
+  const syncKey = document.getElementById('syncKey');
+  const connectSyncBtn = document.getElementById('connectSyncBtn');
+  const syncNowBtn = document.getElementById('syncNowBtn');
+  const disconnectSyncBtn = document.getElementById('disconnectSyncBtn');
+  const syncStatusPill = document.getElementById('syncStatusPill');
+  const syncStatusText = document.getElementById('syncStatusText');
+  const expandedProgressIds = new Set();
+
+  const FIELD_IDS = [
+    'f_object','f_dealDate','f_handoverDate','f_totalPriceWan','f_mainContract','f_escrowAccount','f_notary','f_notaryAssistant',
+    'f_devAgent','f_saleAgent','f_sellerName','f_sellerProxy','f_buyerName','f_buyerProxy','f_caseProgress',
+    'f_bossCheckDate','f_bossCheckNote','f_reportPerformanceDate','f_reportPerformanceNote',
+    'f_sellerFeePercent','f_sellerFeeAmount','f_sellerApproveDate','f_sellerApproveNote','f_sellerPayoutMethod','f_sellerPayoutNote',
+    'f_sellerEscrowUploadDate','f_sellerEscrowUploadNote','f_sellerPaymentDate','f_sellerPaymentNote','f_sellerShotDate','f_sellerShotNote',
+    'f_buyerFeePercent','f_buyerFeeAmount','f_buyerPayoutMethod','f_buyerPayoutNote','f_buyerEscrowUploadDate','f_buyerEscrowUploadNote',
+    'f_buyerPaymentDate','f_buyerPaymentNote','f_buyerShotDate','f_buyerShotNote',
+    'f_devConfirmDate','f_devConfirmNote','f_saleConfirmDate','f_saleConfirmNote','f_splitSheetNote','f_voucherPrintState','f_closeDate','f_closeNote','f_sellerInvoiceAmount','f_sellerInvoiceNo','f_sellerInvoiceDate','f_sellerInvoiceNote','f_buyerInvoiceAmount','f_buyerInvoiceNo','f_buyerInvoiceDate','f_buyerInvoiceNote'
+  ];
+
+  const ROW_GROUPS = {
+    bossCheck:['f_bossCheckDate','f_bossCheckNote'],
+    reportPerformance:['f_reportPerformanceDate','f_reportPerformanceNote'],
+    sellerFeeConfirm:['f_sellerFeePercent','f_sellerFeeAmount'],
+    sellerApprove:['f_sellerApproveDate','f_sellerApproveNote'],
+    sellerPayout:['f_sellerPayoutMethod','f_sellerPayoutNote'],
+    sellerEscrowUpload:['f_sellerEscrowUploadDate','f_sellerEscrowUploadNote'],
+    sellerPayment:['f_sellerPaymentDate','f_sellerPaymentNote'],
+    sellerShot:['f_sellerShotDate','f_sellerShotNote'],
+    buyerFeeConfirm:['f_buyerFeePercent','f_buyerFeeAmount'],
+    buyerPayout:['f_buyerPayoutMethod','f_buyerPayoutNote'],
+    buyerEscrowUpload:['f_buyerEscrowUploadDate','f_buyerEscrowUploadNote'],
+    buyerPayment:['f_buyerPaymentDate','f_buyerPaymentNote'],
+    buyerShot:['f_buyerShotDate','f_buyerShotNote'],
+    devConfirm:['f_devConfirmDate','f_devConfirmNote'],
+    saleConfirm:['f_saleConfirmDate','f_saleConfirmNote'],
+    splitSheet:['f_splitSheetNote'],
+    voucherPrint:['f_voucherPrintState'],
+    closeCase:['f_closeDate','f_closeNote'],
+    sellerInvoice:['f_sellerInvoiceAmount','f_sellerInvoiceNo','f_sellerInvoiceDate','f_sellerInvoiceNote'],
+    buyerInvoice:['f_buyerInvoiceAmount','f_buyerInvoiceNo','f_buyerInvoiceDate','f_buyerInvoiceNote']
+  };
+
+  const toggleState = {
+    splitSheet:false,
+    voucherPrint:'',
+    sellerProxyNone:false,
+    buyerProxyNone:false,
+    bossCheckNone:false,
+    sellerApproveDirect:false,
+    sellerApproveAccessory:false,
+    sellerApproveRent:false,
+    sellerPayoutAccessory:false,
+    sellerEscrowUploadAccessory:false,
+    sellerEscrowUploadRent:false,
+    sellerPaymentAccessory:false,
+    sellerShotAccessory:false,
+    buyerPayoutAccessory:false,
+    buyerEscrowUploadAccessory:false,
+    buyerEscrowUploadRent:false,
+    buyerPaymentAccessory:false,
+    buyerShotAccessory:false,
+    devConfirmAccessory:false,
+    saleConfirmAccessory:false
+  };
+
+  let cases = loadCases();
+  let supabaseClient = null;
+  let syncPollTimer = null;
+  let syncDebounceTimer = null;
+  let syncBusy = false;
+  applySyncMeta();
+  let editingId = null;
+  let incompleteOnly = false;
+  const savedMetaTime = localStorage.getItem(META_KEY);
+  if(savedMetaTime) setTopSync(savedMetaTime);
+
+  function nowTaipei(){
+    const d = new Date();
+    return new Intl.DateTimeFormat('zh-TW',{
+      timeZone:'Asia/Taipei',
+      year:'numeric', month:'2-digit', day:'2-digit',
+      hour:'2-digit', minute:'2-digit',
+      hour12:false
+    }).format(d);
+  }
+
+  function setTopSync(text){
+    if(topSyncText) topSyncText.textContent = `最後同步時間：${text}`;
+  }
+
+  function touchSync(){
+    const stamp = nowTaipei();
+    localStorage.setItem(LOCAL_SAVE_KEY, stamp);
+    return stamp;
+  }
+
+  function markLocalChanged(){
+    const epoch = Date.now();
+    localStorage.setItem(LOCAL_EPOCH_KEY, String(epoch));
+    return epoch;
+  }
+
+  function getLocalEpoch(){
+    return Number(localStorage.getItem(LOCAL_EPOCH_KEY) || '0') || 0;
+  }
+
+  function recordCloudSync(text){
+    const stamp = text || nowTaipei();
+    localStorage.setItem(META_KEY, stamp);
+    setTopSync(stamp);
+    return stamp;
+  }
+
+  function loadSyncMeta(){
+    try{ return JSON.parse(localStorage.getItem(SYNC_META_KEY) || '{}'); }
+    catch(e){ return {}; }
+  }
+
+  function saveSyncMeta(meta){
+    localStorage.setItem(SYNC_META_KEY, JSON.stringify(meta || {}));
+  }
+
+  function applySyncMeta(){
+    const meta = loadSyncMeta();
+    if(syncUrl) syncUrl.value = meta.url || '';
+    if(syncKey) syncKey.value = meta.key || '';
+    if(syncStatusPill){
+      const connected = !!meta.connected;
+      syncStatusPill.textContent = connected ? '已連線' : '未連線';
+      syncStatusPill.classList.toggle('connected', connected);
+    }
+    if(syncStatusText){
+      if(meta.message) syncStatusText.textContent = meta.message;
+      else if(meta.connected) syncStatusText.textContent = '已連線，可立即同步目前資料。';
+      else syncStatusText.textContent = '尚未連線雲端。';
+    }
+  }
+
+  function markSyncStatus(connected, message){
+    const meta = loadSyncMeta();
+    meta.connected = connected;
+    meta.message = message || (connected ? '已連線，可立即同步目前資料。' : '尚未連線雲端。');
+    if(syncUrl) meta.url = syncUrl.value.trim();
+    if(syncKey) meta.key = syncKey.value.trim();
+    saveSyncMeta(meta);
+    applySyncMeta();
+  }
+
+  function getLocalPayload(){
+    return {
+      cases: Array.isArray(cases) ? cases : [],
+      updatedEpoch: getLocalEpoch(),
+      updatedAt: nowTaipei()
+    };
+  }
+
+  function applyRemotePayload(payload){
+    const remoteCases = Array.isArray(payload?.cases) ? payload.cases : [];
+    cases = remoteCases;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
+    if(payload && payload.updatedEpoch){
+      localStorage.setItem(LOCAL_EPOCH_KEY, String(Number(payload.updatedEpoch) || 0));
+    }
+    recordCloudSync();
+    render();
+  }
+
+  function stopSyncPolling(){
+    if(syncPollTimer){
+      clearInterval(syncPollTimer);
+      syncPollTimer = null;
+    }
+  }
+
+  function startSyncPolling(){
+    stopSyncPolling();
+    syncPollTimer = window.setInterval(() => {
+      if(document.visibilityState === 'visible'){
+        syncRoundTrip('poll');
+      }
+    }, 8000);
+  }
+
+  function getSyncErrorMessage(error){
+    const raw = [error?.message, error?.details, error?.hint, error?.code].filter(Boolean).join(' | ');
+    if(/deal_progress_state/i.test(raw) || /schema cache/i.test(raw) || /relation .*deal_progress_state/i.test(raw) || /Could not find the table/i.test(raw)){
+      return '找不到 public.deal_progress_state，請先到 Supabase 的 SQL Editor 執行建立資料表 SQL。';
+    }
+    if(/Invalid API key/i.test(raw) || /JWT/i.test(raw) || /401/.test(raw) || /403/.test(raw)){
+      return 'Project URL 或 Publishable Key 不正確，或資料表政策尚未開放。';
+    }
+    if(/Failed to fetch/i.test(raw)){
+      return '無法連到 Supabase，請確認網路、Project URL 與瀏覽器是否允許連線。';
+    }
+    if(/supabase-js 載入失敗/i.test(raw)){
+      return 'Supabase 套件載入失敗，請確認這台電腦可連外網，並重新整理頁面。';
+    }
+    return raw || '同步失敗。';
+  }
+
+  async function createSupabaseClient(){
+    if(!window.supabase || !window.supabase.createClient){
+      throw new Error('supabase-js 載入失敗');
+    }
+    const url = syncUrl ? syncUrl.value.trim() : '';
+    const key = syncKey ? syncKey.value.trim() : '';
+    if(!url || !key){
+      throw new Error('請先輸入 Project URL 與 Publishable Key');
+    }
+    supabaseClient = window.supabase.createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+    return supabaseClient;
+  }
+
+  async function fetchRemoteState(){
+    if(!supabaseClient) await createSupabaseClient();
+    const { data, error } = await supabaseClient
+      .from(SYNC_TABLE)
+      .select('workspace_key,payload,updated_at')
+      .eq('workspace_key', SYNC_WORKSPACE)
+      .maybeSingle();
+    if(error) throw error;
+    return data || null;
+  }
+
+  async function pushLocalToRemote(){
+    if(!supabaseClient) await createSupabaseClient();
+    const localPayload = getLocalPayload();
+    let epoch = Number(localPayload.updatedEpoch) || 0;
+    if(!epoch){
+      epoch = Date.now();
+      localStorage.setItem(LOCAL_EPOCH_KEY, String(epoch));
+      localPayload.updatedEpoch = epoch;
+    }
+    localPayload.updatedAt = nowTaipei();
+    const { error } = await supabaseClient
+      .from(SYNC_TABLE)
+      .upsert({ workspace_key: SYNC_WORKSPACE, payload: localPayload }, { onConflict: 'workspace_key' });
+    if(error) throw error;
+    recordCloudSync();
+    return localPayload;
+  }
+
+  async function syncRoundTrip(reason = 'manual'){
+    if(syncBusy) return;
+    const meta = loadSyncMeta();
+    if(!meta.connected){
+      if(reason === 'manual' || reason === 'connect' || reason === 'auto'){
+        await createSupabaseClient();
+      }else{
+        return;
+      }
+    }
+    syncBusy = true;
+    try{
+      if(syncStatusText) syncStatusText.textContent = '同步中…';
+      const remoteRow = await fetchRemoteState();
+      const remotePayload = remoteRow?.payload || null;
+      const remoteCases = Array.isArray(remotePayload?.cases) ? remotePayload.cases : [];
+      const remoteEpoch = Number(remotePayload?.updatedEpoch || 0) || 0;
+      const localEpoch = getLocalEpoch();
+      const localHasData = Array.isArray(cases) && cases.length > 0;
+      const remoteHasData = remoteCases.length > 0;
+
+      if(!remoteRow){
+        await pushLocalToRemote();
+        markSyncStatus(true, '已建立雲端資料並完成同步。');
+      }else if(remoteEpoch > localEpoch){
+        applyRemotePayload(remotePayload);
+        markSyncStatus(true, '已載入雲端最新資料。');
+      }else if(localEpoch > remoteEpoch || (!remoteHasData && localHasData)){
+        await pushLocalToRemote();
+        markSyncStatus(true, '已同步本機最新資料到雲端。');
+      }else{
+        recordCloudSync();
+        markSyncStatus(true, reason === 'poll' ? '已連線，雲端同步中。' : '本機與雲端已是最新狀態。');
+      }
+    }catch(error){
+      markSyncStatus(false, getSyncErrorMessage(error));
+      console.error(error);
+    }finally{
+      syncBusy = false;
+    }
+  }
+
+  async function connectSupabase(){
+    try{
+      await createSupabaseClient();
+      markSyncStatus(true, '已連線，正在同步資料…');
+      await syncRoundTrip('connect');
+      startSyncPolling();
+    }catch(error){
+      stopSyncPolling();
+      supabaseClient = null;
+      markSyncStatus(false, getSyncErrorMessage(error));
+      console.error(error);
+    }
+  }
+
+  function disconnectSupabase(){
+    stopSyncPolling();
+    supabaseClient = null;
+    markSyncStatus(false, '已中斷雲端連線。');
+  }
+
+  function scheduleAutoSync(){
+    const meta = loadSyncMeta();
+    if(!meta.connected) return;
+    if(syncDebounceTimer) clearTimeout(syncDebounceTimer);
+    syncDebounceTimer = window.setTimeout(() => {
+      syncRoundTrip('auto');
+    }, 1200);
+  }
+
+  function loadCases(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch(e){ return []; }
+  }
+
+  function saveCases(renderAfter=false){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
+    markLocalChanged();
+    touchSync();
+    scheduleAutoSync();
+    if(renderAfter) render();
+  }
+
+  function saveDraft(data){
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+    touchSync();
+  }
+
+  function loadDraft(){
+    try{ return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); }
+    catch(e){ return null; }
+  }
+
+  function clearDraft(){ localStorage.removeItem(DRAFT_KEY); }
+
+  function safeText(v){ return v == null ? '' : String(v); }
+
+  function rocDateNormalize(raw){
+    const value = safeText(raw).trim();
+    if(!value) return '';
+    if(/^\d{3}\/\d{1,2}\/\d{1,2}$/.test(value)) return value;
+    if(/^\d{1,2}\/\d{1,2}$/.test(value)){
+      const [m,d] = value.split('/').map(Number);
+      if(m>=1 && m<=12 && d>=1 && d<=31) return `${ROC_YEAR_DEFAULT}/${m}/${d}`;
+    }
+    if(/^\d{4}-\d{1,2}-\d{1,2}$/.test(value)){
+      const [y,m,d] = value.split('-').map(Number);
+      return `${y-1911}/${m}/${d}`;
+    }
+    return value;
+  }
+
+  function isLeapYear(year){
+    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+  }
+
+  function isValidDateParts(year, month, day){
+    if(!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return false;
+    if(month < 1 || month > 12 || day < 1) return false;
+    const maxDays = [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+    return day <= maxDays;
+  }
+
+  function isValidDateInput(value){
+    const text = safeText(value).trim();
+    if(!text) return true;
+    let y,m,d;
+    if(/^\d{3}\/\d{1,2}\/\d{1,2}$/.test(text)){
+      [y,m,d] = text.split('/').map(Number);
+      y += 1911;
+      return isValidDateParts(y,m,d);
+    }
+    if(/^\d{4}-\d{1,2}-\d{1,2}$/.test(text)){
+      [y,m,d] = text.split('-').map(Number);
+      return isValidDateParts(y,m,d);
+    }
+    return false;
+  }
+
+  function setDateInvalid(el){
+    el.classList.add('date-invalid');
+    el.setCustomValidity('日期錯誤');
+    el.reportValidity();
+  }
+
+  function clearDateInvalid(el){
+    el.classList.remove('date-invalid');
+    el.setCustomValidity('');
+  }
+
+  function parsePercent(v){
+    const s = safeText(v).replace(/%/g,'').replace(/,/g,'').trim();
+    if(!s) return null;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function parseAmount(v){
+    let s = safeText(v)
+      .replace(/,/g,'')
+      .replace(/\$/g,'')
+      .replace(/NT\$/gi,'')
+      .replace(/元/g,'')
+      .replace(/\s+/g,'')
+      .trim();
+    if(!s) return null;
+    let multi = 1;
+    if(s.includes('萬')){ multi = 10000; s = s.replace(/萬/g,''); }
+    const n = Number(s);
+    return Number.isFinite(n) ? n * multi : null;
+  }
+
+  function fmtMoney(n){
+    const value = Math.round(Number(n) || 0);
+    return '$' + value.toLocaleString('en-US');
+  }
+
+  function getFeeExpectedAmount(prefix, source){
+    const form = source || collectForm();
+    const totalWan = Number(String(form?.f_totalPriceWan || '').replace(/,/g,'')) || 0;
+    const pctRaw = safeText(form?.[`f_${prefix}FeePercent`]);
+    const amtRaw = safeText(form?.[`f_${prefix}FeeAmount`]);
+    const pct = parsePercent(pctRaw);
+    const amt = parseAmount(amtRaw);
+    if(pct != null && pctRaw.trim() !== ''){
+      return totalWan * 10000 * (pct / 100);
+    }
+    if(amt != null && amtRaw.trim() !== ''){
+      return amt;
+    }
+    return null;
+  }
+
+
+  function invoiceComplete(prefix){
+    return ['Amount','No','Date'].every(suffix => !!safeText(getEl(`f_${prefix}Invoice${suffix}`)?.value).trim());
+  }
+
+  function refreshInvoiceWarnings(){
+    const configs = [
+      { prefix:'seller', warnId:'warn_sellerInvoice' },
+      { prefix:'buyer', warnId:'warn_buyerInvoice' }
+    ];
+    configs.forEach(cfg => {
+      const warnEl = getEl(cfg.warnId);
+      if(!warnEl) return;
+      const invoiceRaw = safeText(getEl(`f_${cfg.prefix}InvoiceAmount`)?.value).trim();
+      let msg = '';
+      if(invoiceRaw){
+        const invoiceAmt = parseAmount(invoiceRaw);
+        const expectedAmt = getFeeExpectedAmount(cfg.prefix);
+        if(invoiceAmt == null || expectedAmt == null || Math.round(invoiceAmt) !== Math.round(expectedAmt)){
+          msg = '發票金額不符合';
+        }
+      }
+      warnEl.textContent = msg;
+      warnEl.style.display = msg ? 'block' : 'block';
+    });
+  }
+
+  function shortRocDate(v){
+    const s = safeText(v).trim();
+    const m = s.match(/^(\d{2,3})\/(\d{1,2})\/(\d{1,2})$/);
+    return m ? `${Number(m[2])}/${Number(m[3])}` : s;
+  }
+
+  function escapeHtml(str){
+    return safeText(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+  }
+
+  function parseRocDateValue(str){
+    const value = safeText(str).trim();
+    if(!value) return Infinity;
+    let y,m,d;
+    if(/^\d{3}\/\d{1,2}\/\d{1,2}$/.test(value)){
+      [y,m,d] = value.split('/').map(Number);
+      y += 1911;
+    }else if(/^\d{4}-\d{1,2}-\d{1,2}$/.test(value)){
+      [y,m,d] = value.split('-').map(Number);
+    }else{
+      return Infinity;
+    }
+    const dt = new Date(y, (m||1)-1, d||1).getTime();
+    return Number.isFinite(dt) ? dt : Infinity;
+  }
+
+  function getEl(id){ return document.getElementById(id); }
+
+  function collectForm(){
+    const data = {};
+    FIELD_IDS.forEach(id => {
+      const el = getEl(id);
+      data[id] = el ? el.value : '';
+    });
+    data.toggleState = JSON.parse(JSON.stringify(toggleState));
+    data.rowUpdated = {};
+    Object.keys(ROW_GROUPS).forEach(key => {
+      data.rowUpdated[key] = getEl(`updated_${key}`)?.textContent || '最後更新：--';
+    });
+    return data;
+  }
+
+  function setObjectLiveTitle(){
+    const value = getEl('f_object').value.trim();
+    modalTitle.textContent = value || '物件內容';
+    objectLiveTitle.textContent = '';
+  }
+
+  function setRowUpdated(key, stamp){
+    const target = getEl(`updated_${key}`);
+    if(target) target.textContent = `最後更新：${stamp || '--'}`;
+  }
+
+  function getRowUpdatedText(key){
+    return getEl(`updated_${key}`)?.textContent || '最後更新：--';
+  }
+
+  function fillForm(source){
+    const data = source || {};
+    FIELD_IDS.forEach(id => {
+      const el = getEl(id);
+      if(el) el.value = data[id] || '';
+    });
+    const savedToggle = data.toggleState || {};
+    toggleState.splitSheet = !!savedToggle.splitSheet;
+    toggleState.voucherPrint = savedToggle.voucherPrint || data.f_voucherPrintState || '';
+    toggleState.sellerProxyNone = !!savedToggle.sellerProxyNone;
+    toggleState.buyerProxyNone = !!savedToggle.buyerProxyNone;
+    toggleState.bossCheckNone = !!savedToggle.bossCheckNone;
+    toggleState.sellerApproveDirect = !!savedToggle.sellerApproveDirect;
+    toggleState.sellerApproveAccessory = !!savedToggle.sellerApproveAccessory;
+    toggleState.sellerApproveRent = !!savedToggle.sellerApproveRent;
+    toggleState.sellerPayoutAccessory = !!savedToggle.sellerPayoutAccessory;
+    toggleState.sellerEscrowUploadAccessory = !!savedToggle.sellerEscrowUploadAccessory;
+    toggleState.sellerEscrowUploadRent = !!savedToggle.sellerEscrowUploadRent;
+    toggleState.sellerPaymentAccessory = !!savedToggle.sellerPaymentAccessory;
+    toggleState.sellerShotAccessory = !!savedToggle.sellerShotAccessory;
+    toggleState.buyerPayoutAccessory = !!savedToggle.buyerPayoutAccessory;
+    toggleState.buyerEscrowUploadAccessory = !!savedToggle.buyerEscrowUploadAccessory;
+    toggleState.buyerEscrowUploadRent = !!savedToggle.buyerEscrowUploadRent;
+    toggleState.buyerPaymentAccessory = !!savedToggle.buyerPaymentAccessory;
+    toggleState.buyerShotAccessory = !!savedToggle.buyerShotAccessory;
+    toggleState.devConfirmAccessory = !!savedToggle.devConfirmAccessory;
+    toggleState.saleConfirmAccessory = !!savedToggle.saleConfirmAccessory;
+    Object.keys(ROW_GROUPS).forEach(key => {
+      const text = data.rowUpdated && data.rowUpdated[key] ? data.rowUpdated[key] : '最後更新：--';
+      const target = getEl(`updated_${key}`);
+      if(target) target.textContent = text;
+    });
+
+    setObjectLiveTitle();
+    refreshFeeFormula();
+    refreshStatusUI();
+    applyIncompleteFilter();
+  }
+
+  function resetForm(){
+    editingId = null;
+    modalTitle.textContent = '物件內容';
+    FIELD_IDS.forEach(id => { const el = getEl(id); if(el) el.value = ''; });
+    toggleState.splitSheet = false;
+    toggleState.voucherPrint = '';
+    toggleState.sellerProxyNone = false;
+    toggleState.buyerProxyNone = false;
+    toggleState.bossCheckNone = false;
+    toggleState.sellerApproveAccessory = false;
+    toggleState.sellerApproveRent = false;
+    toggleState.sellerPayoutAccessory = false;
+    toggleState.sellerEscrowUploadAccessory = false;
+    toggleState.sellerEscrowUploadRent = false;
+    toggleState.sellerPaymentAccessory = false;
+    toggleState.sellerShotAccessory = false;
+    toggleState.buyerPayoutAccessory = false;
+    toggleState.buyerEscrowUploadAccessory = false;
+    toggleState.buyerEscrowUploadRent = false;
+    toggleState.buyerPaymentAccessory = false;
+    toggleState.buyerShotAccessory = false;
+    toggleState.devConfirmAccessory = false;
+    toggleState.saleConfirmAccessory = false;
+    Object.keys(ROW_GROUPS).forEach(key => setRowUpdated(key, '--'));
+    draftUpdatedText.textContent = '輸入更新：--';
+    setObjectLiveTitle();
+    refreshFeeFormula();
+    refreshStatusUI();
+    applyIncompleteFilter();
+  }
+
+  function buildRecordFromData(data, existing){
+    const base = existing || {};
+    return {
+      id: base.id || crypto.randomUUID(),
+      object: data.f_object || '',
+      dealDate: data.f_dealDate || '',
+      handoverDate: data.f_handoverDate || '',
+      totalPriceWan: data.f_totalPriceWan || '',
+      mainContract: data.f_mainContract || '',
+      escrowAccount: data.f_escrowAccount || '',
+      notary: data.f_notary || '',
+      notaryAssistant: data.f_notaryAssistant || '',
+      devAgent: data.f_devAgent || '',
+      saleAgent: data.f_saleAgent || '',
+      sellerName: data.f_sellerName || '',
+      sellerProxy: data.f_sellerProxy || '',
+      buyerName: data.f_buyerName || '',
+      buyerProxy: data.f_buyerProxy || '',
+      notes: base.notes || '',
+      status: safeText(data.f_closeDate).trim() ? '已結案' : '進行中',
+      createdAt: base.createdAt || nowTaipei(),
+      updatedAt: nowTaipei(),
+      archivedAt: safeText(data.f_closeDate).trim() || '',
+      form: data
+    };
+  }
+
+  function hasMeaningfulData(data){
+    return FIELD_IDS.some(id => safeText(data[id]).trim() !== '');
+  }
+
+  function persistLive(){
+    const data = collectForm();
+    if(!hasMeaningfulData(data)){
+      saveDraft(data);
+      return;
+    }
+    const stamp = touchSync();
+    if(draftUpdatedText) draftUpdatedText.textContent = `輸入更新：${stamp}`;
+    if(editingId){
+      const idx = cases.findIndex(item => item.id === editingId);
+      if(idx >= 0){
+        const updated = buildRecordFromData(data, cases[idx]);
+        cases[idx] = updated;
+        saveCases(false);
+      }else{
+        const record = buildRecordFromData(data);
+        editingId = record.id;
+        cases.unshift(record);
+        saveCases(false);
+      }
+    }else{
+      const record = buildRecordFromData(data);
+      editingId = record.id;
+      cases.unshift(record);
+      saveCases(false);
+      clearDraft();
+    }
+  }
+
+  function markUpdated(key){
+    const stamp = nowTaipei();
+    setRowUpdated(key, stamp);
+    persistLive();
+    if(editingId) render();
+  }
+
+  function setStatusBadge(id, mode, text){
+    const el = getEl(id);
+    if(!el) return;
+    el.className = `status-badge ${mode}`;
+    el.textContent = text;
+  }
+
+  function applyIncompleteFilter(){
+    if(toggleIncompleteBtn){
+      toggleIncompleteBtn.textContent = '未做';
+      toggleIncompleteBtn.classList.toggle('active', incompleteOnly);
+    }
+    document.querySelectorAll('.section-card').forEach(card => {
+      const title = card.querySelector('.section-title')?.textContent || '';
+      const keepAlways = !title || title.includes('基本資料');
+      const rows = [...card.querySelectorAll('.line-row')];
+      if(!rows.length){
+        card.style.display = '';
+        return;
+      }
+      let anyVisible = false;
+      rows.forEach(row => {
+        const status = row.querySelector('.status-badge');
+        const isPending = status ? status.textContent.trim() === '未做' : true;
+        const show = !incompleteOnly || isPending;
+        row.style.display = show ? '' : 'none';
+        if(show) anyVisible = true;
+      });
+      card.style.display = keepAlways || anyVisible || !incompleteOnly ? '' : 'none';
+    });
+  }
+
+  function refreshStatusUI(){
+    const hasValue = id => !!getEl(id).value.trim();
+    const hasAny = ids => ids.some(id => !!getEl(id).value.trim());
+
+    setStatusBadge('status_bossCheck', (hasValue('f_bossCheckDate') || toggleState.bossCheckNone) ? 'done' : 'pending', (hasValue('f_bossCheckDate') || toggleState.bossCheckNone) ? '已完成' : '未做');
+    setStatusBadge('status_reportPerformance', hasValue('f_reportPerformanceDate') ? 'done' : 'pending', hasValue('f_reportPerformanceDate') ? '已完成' : '未做');
+
+    setStatusBadge('status_sellerFeeConfirm', hasAny(['f_sellerFeePercent','f_sellerFeeAmount']) ? 'done' : 'pending', hasAny(['f_sellerFeePercent','f_sellerFeeAmount']) ? '完成' : '未做');
+    setStatusBadge('status_sellerApprove', (hasValue('f_sellerApproveDate') || toggleState.sellerApproveDirect || toggleState.sellerApproveAccessory || toggleState.sellerApproveRent) ? 'done' : 'pending', (hasValue('f_sellerApproveDate') || toggleState.sellerApproveDirect || toggleState.sellerApproveAccessory || toggleState.sellerApproveRent) ? '完成' : '未做');
+    setStatusBadge('status_sellerPayout', (hasValue('f_sellerPayoutMethod') || toggleState.sellerPayoutAccessory) ? 'done' : 'pending', (hasValue('f_sellerPayoutMethod') || toggleState.sellerPayoutAccessory) ? '完成' : '未做');
+    setStatusBadge('status_sellerEscrowUpload', (hasValue('f_sellerEscrowUploadDate') || toggleState.sellerEscrowUploadAccessory || toggleState.sellerEscrowUploadRent) ? 'done' : 'pending', (hasValue('f_sellerEscrowUploadDate') || toggleState.sellerEscrowUploadAccessory || toggleState.sellerEscrowUploadRent) ? '完成' : '未做');
+    setStatusBadge('status_sellerPayment', (hasValue('f_sellerPaymentDate') || toggleState.sellerPaymentAccessory) ? 'done' : 'pending', (hasValue('f_sellerPaymentDate') || toggleState.sellerPaymentAccessory) ? '完成' : '未做');
+    setStatusBadge('status_sellerShot', (hasValue('f_sellerShotDate') || toggleState.sellerShotAccessory) ? 'done' : 'pending', (hasValue('f_sellerShotDate') || toggleState.sellerShotAccessory) ? '完成' : '未做');
+
+    setStatusBadge('status_buyerFeeConfirm', hasAny(['f_buyerFeePercent','f_buyerFeeAmount']) ? 'done' : 'pending', hasAny(['f_buyerFeePercent','f_buyerFeeAmount']) ? '完成' : '未做');
+    setStatusBadge('status_buyerPayout', (hasValue('f_buyerPayoutMethod') || toggleState.buyerPayoutAccessory) ? 'done' : 'pending', (hasValue('f_buyerPayoutMethod') || toggleState.buyerPayoutAccessory) ? '完成' : '未做');
+    setStatusBadge('status_buyerEscrowUpload', (hasValue('f_buyerEscrowUploadDate') || toggleState.buyerEscrowUploadAccessory || toggleState.buyerEscrowUploadRent) ? 'done' : 'pending', (hasValue('f_buyerEscrowUploadDate') || toggleState.buyerEscrowUploadAccessory || toggleState.buyerEscrowUploadRent) ? '完成' : '未做');
+    setStatusBadge('status_buyerPayment', (hasValue('f_buyerPaymentDate') || toggleState.buyerPaymentAccessory) ? 'done' : 'pending', (hasValue('f_buyerPaymentDate') || toggleState.buyerPaymentAccessory) ? '完成' : '未做');
+    setStatusBadge('status_buyerShot', (hasValue('f_buyerShotDate') || toggleState.buyerShotAccessory) ? 'done' : 'pending', (hasValue('f_buyerShotDate') || toggleState.buyerShotAccessory) ? '完成' : '未做');
+
+    setStatusBadge('status_devConfirm', (hasValue('f_devConfirmDate') || toggleState.devConfirmAccessory) ? 'done' : 'pending', (hasValue('f_devConfirmDate') || toggleState.devConfirmAccessory) ? '已完成' : '未做');
+    setStatusBadge('status_saleConfirm', (hasValue('f_saleConfirmDate') || toggleState.saleConfirmAccessory) ? 'done' : 'pending', (hasValue('f_saleConfirmDate') || toggleState.saleConfirmAccessory) ? '已完成' : '未做');
+    setStatusBadge('status_splitSheet', toggleState.splitSheet ? 'done' : 'pending', toggleState.splitSheet ? '已完成' : '未做');
+
+    const voucher = toggleState.voucherPrint || getEl('f_voucherPrintState').value || '';
+    if(voucher) setStatusBadge('status_voucherPrint','done','完成');
+    else setStatusBadge('status_voucherPrint','pending','未做');
+    setStatusBadge('status_closeCase', hasValue('f_closeDate') ? 'done' : 'pending', hasValue('f_closeDate') ? '已結案' : '未做');
+    setStatusBadge('status_sellerInvoice', invoiceComplete('seller') ? 'done' : 'pending', invoiceComplete('seller') ? '完成' : '未做');
+    setStatusBadge('status_buyerInvoice', invoiceComplete('buyer') ? 'done' : 'pending', invoiceComplete('buyer') ? '完成' : '未做');
+    refreshInvoiceWarnings();
+
+    document.querySelectorAll('[data-toggle="splitSheet"]').forEach(btn => btn.classList.toggle('active', !!toggleState.splitSheet));
+    document.querySelectorAll('[data-toggle="sellerProxyNone"]').forEach(btn => btn.classList.toggle('active', !!toggleState.sellerProxyNone));
+    document.querySelectorAll('[data-toggle="buyerProxyNone"]').forEach(btn => btn.classList.toggle('active', !!toggleState.buyerProxyNone));
+    document.querySelectorAll('[data-toggle="bossCheckNone"]').forEach(btn => btn.classList.toggle('active', !!toggleState.bossCheckNone));
+    document.querySelectorAll('[data-toggle="sellerApproveDirect"]').forEach(btn => btn.classList.toggle('active', !!toggleState.sellerApproveDirect));
+    document.querySelectorAll('[data-toggle="sellerApproveAccessory"]').forEach(btn => btn.classList.toggle('active', !!toggleState.sellerApproveAccessory));
+    document.querySelectorAll('[data-toggle="sellerApproveRent"]').forEach(btn => btn.classList.toggle('active', !!toggleState.sellerApproveRent));
+    document.querySelectorAll('[data-toggle="sellerPayoutAccessory"]').forEach(btn => btn.classList.toggle('active', !!toggleState.sellerPayoutAccessory));
+    document.querySelectorAll('[data-toggle="sellerEscrowUploadAccessory"]').forEach(btn => btn.classList.toggle('active', !!toggleState.sellerEscrowUploadAccessory));
+    document.querySelectorAll('[data-toggle="sellerEscrowUploadRent"]').forEach(btn => btn.classList.toggle('active', !!toggleState.sellerEscrowUploadRent));
+    document.querySelectorAll('[data-toggle="sellerPaymentAccessory"]').forEach(btn => btn.classList.toggle('active', !!toggleState.sellerPaymentAccessory));
+    document.querySelectorAll('[data-toggle="sellerShotAccessory"]').forEach(btn => btn.classList.toggle('active', !!toggleState.sellerShotAccessory));
+    document.querySelectorAll('[data-toggle="buyerPayoutAccessory"]').forEach(btn => btn.classList.toggle('active', !!toggleState.buyerPayoutAccessory));
+    document.querySelectorAll('[data-toggle="buyerEscrowUploadAccessory"]').forEach(btn => btn.classList.toggle('active', !!toggleState.buyerEscrowUploadAccessory));
+    document.querySelectorAll('[data-toggle="buyerEscrowUploadRent"]').forEach(btn => btn.classList.toggle('active', !!toggleState.buyerEscrowUploadRent));
+    document.querySelectorAll('[data-toggle="buyerPaymentAccessory"]').forEach(btn => btn.classList.toggle('active', !!toggleState.buyerPaymentAccessory));
+    document.querySelectorAll('[data-toggle="buyerShotAccessory"]').forEach(btn => btn.classList.toggle('active', !!toggleState.buyerShotAccessory));
+    document.querySelectorAll('[data-toggle="devConfirmAccessory"]').forEach(btn => btn.classList.toggle('active', !!toggleState.devConfirmAccessory));
+    document.querySelectorAll('[data-toggle="saleConfirmAccessory"]').forEach(btn => btn.classList.toggle('active', !!toggleState.saleConfirmAccessory));
+
+    const sellerPayout = getEl('f_sellerPayoutMethod').value || '';
+    document.querySelectorAll('[data-state="sellerPayoutMethod"]').forEach(btn => btn.classList.toggle('active', btn.dataset.value === sellerPayout));
+    const buyerPayout = getEl('f_buyerPayoutMethod').value || '';
+    document.querySelectorAll('[data-state="buyerPayoutMethod"]').forEach(btn => btn.classList.toggle('active', btn.dataset.value === buyerPayout));
+
+    document.querySelectorAll('[data-state="voucherPrint"]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.value === voucher);
+    });
+    applyIncompleteFilter();
+  }
+
+  function refreshFeeFormula(){
+    const totalWan = Number(String(getEl('f_totalPriceWan').value || '').replace(/,/g,'')) || 0;
+    function apply(prefix, formulaId){
+      const pctEl = getEl(`f_${prefix}FeePercent`);
+      const amtEl = getEl(`f_${prefix}FeeAmount`);
+      const formulaEl = getEl(formulaId);
+      const pct = parsePercent(pctEl.value);
+      const amt = parseAmount(amtEl.value);
+      pctEl.disabled = false;
+      amtEl.disabled = false;
+      if(pct != null && pctEl.value.trim() !== ''){
+        const calc = totalWan * 10000 * (pct / 100);
+        amtEl.disabled = true;
+        formulaEl.textContent = `總價${totalWan || 0}萬*${pct.toFixed(2)}%= ${fmtMoney(calc)}`;
+      }else if(amt != null && amtEl.value.trim() !== ''){
+        const rate = totalWan > 0 ? (amt / (totalWan * 10000) * 100) : 0;
+        pctEl.disabled = true;
+        formulaEl.textContent = `總價${totalWan || 0}萬*${rate.toFixed(2)}%= ${fmtMoney(amt)}`;
+      }else{
+        formulaEl.textContent = `總價${totalWan || 0}萬*0.00%= $0`;
+      }
+    }
+    apply('seller','sellerFeeFormula');
+    apply('buyer','buyerFeeFormula');
+  }
+
+  function calculateFeeSummary(form, prefix){
+    const totalWan = Number(String(form?.f_totalPriceWan || '').replace(/,/g,'')) || 0;
+    const pct = parsePercent(form?.[`f_${prefix}FeePercent`]);
+    const amt = parseAmount(form?.[`f_${prefix}FeeAmount`]);
+    if(pct != null && safeText(form?.[`f_${prefix}FeePercent`]).trim() !== ''){
+      const calc = totalWan * 10000 * (pct / 100);
+      return `${pct.toFixed(2)}% / ${fmtMoney(calc)}`;
+    }
+    if(amt != null && safeText(form?.[`f_${prefix}FeeAmount`]).trim() !== ''){
+      const rate = totalWan > 0 ? (amt / (totalWan * 10000) * 100) : 0;
+      return `${rate.toFixed(2)}% / ${fmtMoney(amt)}`;
+    }
+    return '';
+  }
+
+  function openModal(mode='new', record=null){
+    overlay.classList.add('show');
+    if(mode === 'edit' && record){
+      editingId = record.id;
+      fillForm(record.form || {});
+      if(draftUpdatedText) draftUpdatedText.textContent = `輸入更新：${record.updatedAt || '--'}`;
+    }else{
+      resetForm();
+      const draft = loadDraft();
+      if(draft) fillForm(draft);
+      const blankRecord = buildRecordFromData(collectForm());
+      editingId = blankRecord.id;
+      cases.unshift(blankRecord);
+      saveCases(true);
+      clearDraft();
+    }
+  }
+
+  function closeModal(){
+    overlay.classList.remove('show');
+    render();
+  }
+
+  function progressStatusHtml(mode, text, dateText=''){
+    const date = safeText(dateText).trim();
+    return `<div class="status-stack"><span class="status-badge compact ${mode}">${escapeHtml(text)}</span>${date ? `<div class="status-date">${escapeHtml(date)}</div>` : ''}</div>`;
+  }
+
+  function shortRocDate(value){
+    const text = safeText(value).trim();
+    const m = text.match(/^(\d{3})\/(\d{1,2})\/(\d{1,2})$/);
+    if(!m) return text;
+    return `${Number(m[2])}/${Number(m[3])}`;
+  }
+
+
+  function getRowToggleState(form){
+    return form? (form._toggleState || form.toggleState || {}) : {};
+  }
+
+  function sellerApplyText(form){
+    if(getRowToggleState(form).sellerPayoutAccessory) return `<span class="list-state done">配件</span>`;
+    const date = safeText(form.f_sellerEscrowUploadDate).trim();
+    if(date) return `<span class="list-state done">${escapeHtml(`${shortRocDate(date)}申請賣服`)}</span>`;
+    return `<span class="list-state pending">未申請賣服</span>`;
+  }
+
+  function sellerCompanyText(form){
+    const rowToggle = getRowToggleState(form);
+    if(rowToggle.sellerPayoutAccessory) return `<span class="list-state done">配件</span>`;
+    const date = safeText(form.f_sellerPaymentDate).trim();
+    if(date) return `<span class="list-state done">${escapeHtml(`${shortRocDate(date)}入帳公司`)}</span>`;
+    if(safeText(form.f_sellerEscrowUploadDate).trim()) return `<span class="list-state amber">未入帳公司</span>`;
+    return `<span class="list-state pending">未入帳公司</span>`;
+  }
+
+  function buyerPayoutMethodText(form){
+    const rowToggle = getRowToggleState(form);
+    if(rowToggle.buyerPayoutAccessory) return '配件';
+    return safeText(form.f_buyerPayoutMethod).trim() || '—';
+  }
+
+  function buyerCompanyText(form){
+    const rowToggle = getRowToggleState(form);
+    if(rowToggle.buyerPayoutAccessory) return `<span class="list-state done">配件</span>`;
+    const date = safeText(form.f_buyerPaymentDate).trim();
+    if(date) return `<span class="list-state done">${escapeHtml(`${shortRocDate(date)}入帳公司`)}</span>`;
+    if(safeText(form.f_buyerPayoutMethod).trim()) return `<span class="list-state amber">未入帳公司</span>`;
+    return `<span class="list-state pending">未入帳公司</span>`;
+  }
+
+  function progressPreviewText(form){
+    const text = safeText(form.f_caseProgress).trim();
+    if(!text) return `<span class="current-progress-box empty">尚未填寫</span>`;
+    return `<span class="current-progress-box" title="${escapeHtml(text)}">${escapeHtml(text)}</span>`;
+  }
+
+  function normalizeAmountText(value){
+    return safeText(value).replace(/[\s,$元萬％%]/g,'').replace(/,/g,'').trim();
+  }
+
+  function searchAmountHit(item, keyword){
+    const k = normalizeAmountText(keyword);
+    if(!k) return true;
+    const form = item.form || {};
+    const totalWan = Number(String(item.totalPriceWan || '').replace(/,/g,'')) || 0;
+    const sellerAmt = parseAmount(form.f_sellerFeeAmount);
+    const buyerAmt = parseAmount(form.f_buyerFeeAmount);
+    const sellerInvoiceAmt = parseAmount(form.f_sellerInvoiceAmount);
+    const buyerInvoiceAmt = parseAmount(form.f_buyerInvoiceAmount);
+    const nums = [
+      String(item.totalPriceWan || ''),
+      String(Math.round(totalWan * 10000)),
+      calculateFeeSummary(form,'seller'),
+      calculateFeeSummary(form,'buyer'),
+      sellerAmt != null ? String(Math.round(sellerAmt)) : '',
+      buyerAmt != null ? String(Math.round(buyerAmt)) : '',
+      sellerInvoiceAmt != null ? String(Math.round(sellerInvoiceAmt)) : '',
+      buyerInvoiceAmt != null ? String(Math.round(buyerInvoiceAmt)) : ''
+    ];
+    const hay = nums.map(normalizeAmountText).join(' ');
+    return hay.includes(k);
+  }
+
+
+  function rowProgress(item){
+    const form = item.form || {};
+    const rowToggle = getRowToggleState(form);
+    const sellerFee = calculateFeeSummary(form,'seller') || '—';
+    const buyerFee = calculateFeeSummary(form,'buyer') || '—';
+    const sellerApplyHtml = rowToggle.sellerPayoutAccessory ? '<span class="list-state done">配件</span>' : sellerApplyText(form);
+    const buyerMethodHtml = rowToggle.buyerPayoutAccessory
+      ? '<span class="list-state done">配件</span>'
+      : escapeHtml(buyerPayoutMethodText(form));
+    const progressText = safeText(form.f_caseProgress).trim();
+    const isOpen = expandedProgressIds.has(item.id);
+    const mainRow = `<tr class="click-row ${isOpen ? 'selected-row' : ''}" data-action="edit" data-id="${item.id}">
+      <td class="expand-cell"><button class="expand-btn ${isOpen ? 'open' : ''}" type="button" data-action="toggle-progress" data-id="${item.id}" aria-label="展開目前進度">↳</button></td>
+      <td>${escapeHtml(item.handoverDate || '')}</td>
+      <td>${escapeHtml(item.dealDate || '')}</td>
+      <td class="object-td"><div class="object-cell" title="${escapeHtml(item.object || '未命名')}">${escapeHtml(item.object || '未命名')}</div></td>
+      <td class="notary-cell">${escapeHtml(item.notary || '')}<br>${escapeHtml(item.notaryAssistant || '')}</td>
+      <td class="escrow-td"><div class="escrow-cell" title="${escapeHtml(item.escrowAccount || '')}">${escapeHtml(item.escrowAccount || '')}</div></td>
+      <td><div class="agent-cell" title="${escapeHtml(item.devAgent || '')}">${escapeHtml(item.devAgent || '')}</div></td>
+      <td class="dual-cell">
+        <div class="dual-item"><span class="dual-value">${escapeHtml(sellerFee)}</span></div>
+        ${sellerApplyHtml ? `<div class="dual-item"><span class="dual-value">${sellerApplyHtml}</span></div>` : ''}
+      </td>
+      <td>${sellerCompanyText(form)}</td>
+      <td><div class="agent-cell" title="${escapeHtml(item.saleAgent || '')}">${escapeHtml(item.saleAgent || '')}</div></td>
+      <td class="dual-cell">
+        <div class="dual-item"><span class="dual-value">${escapeHtml(buyerFee)}</span></div>
+        <div class="dual-item"><span class="dual-value">${buyerMethodHtml}</span></div>
+      </td>
+      <td>${buyerCompanyText(form)}</td>
+      <td>${escapeHtml(item.updatedAt || '')}</td>
+    </tr>`;
+    const progressRow = isOpen ? `<tr class="progress-inline-row">
+      <td></td>
+      <td colspan="12">
+        <div class="progress-inline-box" title="${escapeHtml(progressText || '未填寫目前進度')}">
+          <span class="progress-inline-label">目前進度</span>
+          <span class="${progressText ? 'progress-inline-text' : 'progress-inline-empty'}">${escapeHtml(progressText || '未填寫')}</span>
+        </div>
+      </td>
+    </tr>` : '';
+    return mainRow + progressRow;
+  }
+
+  function rowAll(item){
+    return `<tr>
+      <td><button class="object-link" type="button" data-action="edit" data-id="${item.id}">${escapeHtml(item.object || '未命名')}</button></td>
+      <td>${escapeHtml(item.handoverDate || '')}</td>
+      <td>${escapeHtml(item.dealDate || '')}</td>
+      <td>${escapeHtml(item.escrowAccount || '')}</td>
+      <td>${escapeHtml(item.devAgent || '')}</td>
+      <td>${escapeHtml(item.saleAgent || '')}</td>
+      <td>${item.status === '已結案' ? '<span class="tag closed">已結案</span>' : '<span class="tag progress">進行中</span>'}</td>
+      <td>${escapeHtml(item.updatedAt || '')}</td>
+      <td><div class="action-row"><button class="mini-btn mini-edit" data-action="edit" data-id="${item.id}">編輯</button></div></td>
+    </tr>`;
+  }
+
+
+  function rowClosed(item){
+    const form = item.form || {};
+    const sellerInvoiceAmt = parseAmount(form.f_sellerInvoiceAmount);
+    const buyerInvoiceAmt = parseAmount(form.f_buyerInvoiceAmount);
+    const sellerInvoiceHtml = `<div class="closed-invoice-cell"><div class="closed-invoice-no">${escapeHtml(form.f_sellerInvoiceNo || '') || '—'}</div><div class="closed-invoice-amt">${sellerInvoiceAmt != null ? escapeHtml(fmtMoney(sellerInvoiceAmt)) : '—'}</div></div>`;
+    const buyerInvoiceHtml = `<div class="closed-invoice-cell"><div class="closed-invoice-no">${escapeHtml(form.f_buyerInvoiceNo || '') || '—'}</div><div class="closed-invoice-amt">${buyerInvoiceAmt != null ? escapeHtml(fmtMoney(buyerInvoiceAmt)) : '—'}</div></div>`;
+    return `<tr class="click-row" data-action="edit" data-id="${item.id}">
+      <td>${escapeHtml(item.archivedAt || '')}</td>
+      <td>${escapeHtml(item.dealDate || '')}</td>
+      <td class="object-td"><div class="object-cell" title="${escapeHtml(item.object || '未命名')}">${escapeHtml(item.object || '未命名')}</div></td>
+      <td class="notary-cell">${escapeHtml(item.notary || '')}<br>${escapeHtml(item.notaryAssistant || '')}</td>
+      <td><div class="agent-cell" title="${escapeHtml(item.devAgent || '')}">${escapeHtml(item.devAgent || '')}</div></td>
+      <td><div class="agent-cell" title="${escapeHtml(item.saleAgent || '')}">${escapeHtml(item.saleAgent || '')}</div></td>
+      <td class="escrow-td"><div class="escrow-cell" title="${escapeHtml(item.escrowAccount || '')}">${escapeHtml(item.escrowAccount || '')}</div></td>
+      <td>${sellerInvoiceHtml}</td>
+      <td>${buyerInvoiceHtml}</td>
+      <td>${escapeHtml(item.updatedAt || '')}</td>
+      <td><button class="restore-btn" type="button" data-action="reopen" data-id="${item.id}">恢復</button></td>
+    </tr>`;
+  }
+
+  function bindRowActions(){
+    document.querySelectorAll('[data-action]').forEach(el => {
+      el.onclick = (e) => {
+        const id = el.dataset.id;
+        const action = el.dataset.action;
+        const item = cases.find(x => x.id === id);
+        if(!item) return;
+        if(action === 'toggle-progress'){
+          e.stopPropagation();
+          if(expandedProgressIds.has(id)) expandedProgressIds.delete(id);
+          else expandedProgressIds.add(id);
+          render();
+          return;
+        }
+        if(action === 'edit'){
+          e.stopPropagation();
+          openModal('edit', item);
+        }
+        if(action === 'reopen'){
+          e.stopPropagation();
+          if(item.form){
+            item.form.f_closeDate = '';
+            item.form.f_closeNote = '';
+            if(item.form.rowUpdated) item.form.rowUpdated.closeCase = `最後更新：${nowTaipei()}`;
+          }
+          item.status = '進行中';
+          item.archivedAt = '';
+          item.updatedAt = nowTaipei();
+          saveCases(true);
+        }
+        if(action === 'delete'){
+          e.stopPropagation();
+          cases = cases.filter(x => x.id !== id);
+          saveCases(true);
+        }
+      };
+    });
+  }
+
+  function render(){
+    const objectKeyword = (progressSearchObject?.value || '').trim();
+    const notaryKeyword = (progressSearchNotary?.value || '').trim();
+    const agentKeyword = (progressSearchAgent?.value || '').trim();
+    const escrowKeyword = (progressSearchEscrow?.value || '').trim();
+    const amountKeyword = (progressSearchAmount?.value || '').trim();
+    const closedObjectKeyword = (closedSearchObject?.value || '').trim();
+    const closedNotaryKeyword = (closedSearchNotary?.value || '').trim();
+    const closedAgentKeyword = (closedSearchAgent?.value || '').trim();
+    const closedEscrowKeyword = (closedSearchEscrow?.value || '').trim();
+    const closedAmountKeyword = (closedSearchAmount?.value || '').trim();
+    const filterMode = progressFilter ? progressFilter.value : 'all';
+    const isWaitingCloseCase = item => {
+      const form = item.form || {};
+      const sellerDone = !!safeText(form.f_sellerPaymentDate).trim();
+      const buyerDone = !!safeText(form.f_buyerPaymentDate).trim();
+      return sellerDone && buyerDone;
+    };
+    const progressBase = cases
+      .filter(item => item.status !== '已結案')
+      .filter(item => {
+        if(objectKeyword && ![item.object,item.form?.f_caseProgress || ''].join(' ').includes(objectKeyword)) return false;
+        if(notaryKeyword && ![item.notary,item.notaryAssistant].join(' ').includes(notaryKeyword)) return false;
+        if(agentKeyword && ![item.devAgent,item.saleAgent].join(' ').includes(agentKeyword)) return false;
+        if(escrowKeyword && ![item.escrowAccount,item.form?.f_escrowAccount || ''].join(' ').includes(escrowKeyword)) return false;
+        if(amountKeyword && !searchAmountHit(item, amountKeyword)) return false;
+        return true;
+      })
+      .filter(item => {
+        const form = item.form || {};
+        const sellerApplied = !!safeText(form.f_sellerEscrowUploadDate).trim();
+        const sellerPaid = !!safeText(form.f_sellerPaymentDate).trim();
+        const buyerMethod = safeText(form.f_buyerPayoutMethod).trim();
+        const buyerEscrow = !!safeText(form.f_buyerEscrowUploadDate).trim();
+        const buyerCompany = !!safeText(form.f_buyerPaymentDate).trim();
+        if(filterMode === 'sellerNotApplied') return !sellerApplied;
+        if(filterMode === 'sellerNotPaid') return sellerApplied && !sellerPaid;
+        if(filterMode === 'buyerNotEscrow') return buyerMethod === '預計匯入履保' && !buyerEscrow || buyerMethod === '預計入履保' && !buyerEscrow;
+        if(filterMode === 'buyerNotCompany') return buyerMethod === '預計匯款公司' && !buyerCompany;
+        return true;
+      })
+      .sort((a,b) => parseRocDateValue(b.handoverDate) - parseRocDateValue(a.handoverDate) || parseRocDateValue(b.dealDate) - parseRocDateValue(a.dealDate));
+    const waitingClose = progressBase.filter(item => isWaitingCloseCase(item));
+    const progress = progressBase.filter(item => !isWaitingCloseCase(item));
+    const closed = cases
+      .filter(item => item.status === '已結案')
+      .filter(item => {
+        if(closedObjectKeyword && ![item.object,item.form?.f_caseProgress || ''].join(' ').includes(closedObjectKeyword)) return false;
+        if(closedNotaryKeyword && ![item.notary,item.notaryAssistant].join(' ').includes(closedNotaryKeyword)) return false;
+        if(closedAgentKeyword && ![item.devAgent,item.saleAgent].join(' ').includes(closedAgentKeyword)) return false;
+        if(closedEscrowKeyword && ![item.escrowAccount,item.form?.f_escrowAccount || ''].join(' ').includes(closedEscrowKeyword)) return false;
+        if(closedAmountKeyword && !searchAmountHit(item, closedAmountKeyword)) return false;
+        return true;
+      })
+      .sort((a,b) => parseRocDateValue(b.archivedAt) - parseRocDateValue(a.archivedAt) || (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+
+    if(progressCount) progressCount.textContent = `${progress.length} 筆`;
+    if(waitingCloseCount) waitingCloseCount.textContent = `${waitingClose.length} 筆`;
+    if(closedCount) closedCount.textContent = `${closed.length} 筆`;
+    if(expandAllProgressBtn){
+      const everyOpen = progress.length > 0 && progress.every(item => expandedProgressIds.has(item.id));
+      expandAllProgressBtn.textContent = everyOpen ? '隱藏' : '展開';
+      expandAllProgressBtn.disabled = progress.length === 0;
+      expandAllProgressBtn.classList.toggle('open', everyOpen);
+    }
+
+    if(progressBody) progressBody.innerHTML = progress.length ? progress.map(item => rowProgress(item)).join('') : `<tr><td colspan="13" class="empty">目前沒有進行中的案件</td></tr>`;
+    if(waitingCloseBody) waitingCloseBody.innerHTML = waitingClose.length ? waitingClose.map(item => rowProgress(item)).join('') : `<tr><td colspan="13" class="empty">目前沒有等待結案案件</td></tr>`;
+    if(closedBody) closedBody.innerHTML = closed.length ? closed.map(rowClosed).join('') : `<tr><td colspan="13" class="empty">目前沒有已結案案件</td></tr>`;
+    bindRowActions();
+  }
+
+  function saveCurrentRecord(){
+    const data = collectForm();
+    const existing = editingId ? cases.find(item => item.id === editingId) : null;
+    const record = buildRecordFromData(data, existing || undefined);
+    const idx = cases.findIndex(item => item.id === record.id);
+    if(idx >= 0) cases[idx] = record; else cases.unshift(record);
+    saveCases(true);
+    clearDraft();
+    closeModal();
+  }
+
+
+  if(connectSyncBtn){
+    connectSyncBtn.addEventListener('click', async () => {
+      await connectSupabase();
+    });
+  }
+  if(syncNowBtn){
+    syncNowBtn.addEventListener('click', async () => {
+      const meta = loadSyncMeta();
+      if(!meta.connected){
+        await connectSupabase();
+      }else{
+        await syncRoundTrip('manual');
+      }
+    });
+  }
+  if(disconnectSyncBtn){
+    disconnectSyncBtn.addEventListener('click', () => {
+      disconnectSupabase();
+    });
+  }
+  [syncUrl, syncKey].forEach(el => {
+    if(!el) return;
+    el.addEventListener('input', () => {
+      const meta = loadSyncMeta();
+      meta.url = syncUrl ? syncUrl.value.trim() : '';
+      meta.key = syncKey ? syncKey.value.trim() : '';
+      saveSyncMeta(meta);
+    });
+  });
+
+  window.addEventListener('load', () => {
+    const meta = loadSyncMeta();
+    if(meta.url && meta.key && meta.connected){
+      connectSupabase();
+    }
+  });
+
+  document.getElementById('addCaseBtn').addEventListener('click', () => openModal('new'));
+  document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+  if(toggleIncompleteBtn){
+    toggleIncompleteBtn.addEventListener('click', () => {
+      incompleteOnly = !incompleteOnly;
+      applyIncompleteFilter();
+    });
+  }
+  overlay.addEventListener('click', e => { if(e.target === overlay) closeModal(); });
+  const saveBtn = document.getElementById('saveBtn');
+  if(saveBtn) saveBtn.addEventListener('click', () => saveCurrentRecord());
+  document.getElementById('deleteBtn').addEventListener('click', () => {
+    const ok = window.confirm(editingId ? '確定要刪除這筆案件嗎？' : '確定要刪除這筆新增中的案件嗎？');
+    if(!ok) return;
+    if(editingId){
+      cases = cases.filter(item => item.id !== editingId);
+      saveCases(true);
+    }else{
+      clearDraft();
+      touchSync();
+    }
+    closeModal();
+  });
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    if(!window.XLSX){
+      window.alert('Excel 模組尚未載入，請重新整理後再試。');
+      return;
+    }
+    const allRows = (Array.isArray(cases) ? cases : []).map(item => ({
+      狀態: item.status || '',
+      物件: item.object || '',
+      成交日期: item.dealDate || '',
+      預計點交: item.handoverDate || '',
+      成交總價_萬: item.totalPriceWan || '',
+      主約編號: item.mainContract || '',
+      履保帳號: item.escrowAccount || '',
+      簽約代書: item.notary || '',
+      代書助理: item.notaryAssistant || '',
+      開發業務: item.devAgent || '',
+      銷售業務: item.saleAgent || '',
+      賣方姓名: item.sellerName || '',
+      賣方代理人: item.sellerProxy || '',
+      買方姓名: item.buyerName || '',
+      買方代理人: item.buyerProxy || '',
+      目前進度: item.form?.f_caseProgress || '',
+      最後更新時間: item.updatedAt || '',
+      結案日期: item.archivedAt || '',
+      賣方發票金額: item.form?.f_sellerInvoiceAmount || '',
+      賣方發票編號: item.form?.f_sellerInvoiceNo || '',
+      賣方發票日期: item.form?.f_sellerInvoiceDate || '',
+      買方發票金額: item.form?.f_buyerInvoiceAmount || '',
+      買方發票編號: item.form?.f_buyerInvoiceNo || '',
+      買方發票日期: item.form?.f_buyerInvoiceDate || ''
+    }));
+    const wb = XLSX.utils.book_new();
+    const allSheet = XLSX.utils.json_to_sheet(allRows);
+    const progressSheet = XLSX.utils.json_to_sheet(allRows.filter(row => row.狀態 !== '已結案'));
+    const closedSheet = XLSX.utils.json_to_sheet(allRows.filter(row => row.狀態 === '已結案'));
+    XLSX.utils.book_append_sheet(wb, allSheet, '全部案件');
+    XLSX.utils.book_append_sheet(wb, progressSheet, '進行中');
+    XLSX.utils.book_append_sheet(wb, closedSheet, '已結案');
+    XLSX.writeFile(wb, `成交進度匯出_${nowTaipei().replace(/[\/: ]/g,'')}.xlsx`);
+  });
+  [progressSearchObject,progressSearchNotary,progressSearchAgent,progressSearchEscrow,progressSearchAmount,closedSearchObject,closedSearchNotary,closedSearchAgent,closedSearchEscrow,closedSearchAmount].forEach(el => el && el.addEventListener('input', render));
+  if(progressFilter) progressFilter.addEventListener('change', render);
+  if(progressClearBtn){
+    progressClearBtn.addEventListener('click', () => {
+      if(progressFilter) progressFilter.value = 'all';
+      if(progressSearchObject) progressSearchObject.value = '';
+      if(progressSearchNotary) progressSearchNotary.value = '';
+      if(progressSearchAgent) progressSearchAgent.value = '';
+      if(progressSearchEscrow) progressSearchEscrow.value = '';
+      if(progressSearchAmount) progressSearchAmount.value = '';
+      render();
+    });
+  }
+  if(closedClearBtn){
+    closedClearBtn.addEventListener('click', () => {
+      if(closedSearchObject) closedSearchObject.value = '';
+      if(closedSearchNotary) closedSearchNotary.value = '';
+      if(closedSearchAgent) closedSearchAgent.value = '';
+      if(closedSearchEscrow) closedSearchEscrow.value = '';
+      if(closedSearchAmount) closedSearchAmount.value = '';
+      render();
+    });
+  }
+  if(expandAllProgressBtn){
+    expandAllProgressBtn.addEventListener('click', () => {
+      const visible = cases
+        .filter(item => item.status !== '已結案')
+        .filter(item => {
+          const objectKeyword = (progressSearchObject?.value || '').trim();
+          const notaryKeyword = (progressSearchNotary?.value || '').trim();
+          const agentKeyword = (progressSearchAgent?.value || '').trim();
+          const escrowKeyword = (progressSearchEscrow?.value || '').trim();
+          const amountKeyword = (progressSearchAmount?.value || '').trim();
+          const filterMode = progressFilter ? progressFilter.value : 'all';
+          if(objectKeyword && ![item.object,item.form?.f_caseProgress || ''].join(' ').includes(objectKeyword)) return false;
+          if(notaryKeyword && ![item.notary,item.notaryAssistant].join(' ').includes(notaryKeyword)) return false;
+          if(agentKeyword && ![item.devAgent,item.saleAgent].join(' ').includes(agentKeyword)) return false;
+          if(escrowKeyword && ![item.escrowAccount,item.form?.f_escrowAccount || ''].join(' ').includes(escrowKeyword)) return false;
+          if(amountKeyword && !searchAmountHit(item, amountKeyword)) return false;
+          const form = item.form || {};
+          const sellerApplied = !!safeText(form.f_sellerEscrowUploadDate).trim();
+          const sellerPaid = !!safeText(form.f_sellerPaymentDate).trim();
+          const buyerMethod = safeText(form.f_buyerPayoutMethod).trim();
+          const buyerEscrow = !!safeText(form.f_buyerEscrowUploadDate).trim();
+          const buyerCompany = !!safeText(form.f_buyerPaymentDate).trim();
+          if(filterMode === 'sellerNotApplied') return !sellerApplied;
+          if(filterMode === 'sellerNotPaid') return sellerApplied && !sellerPaid;
+          if(filterMode === 'buyerNotEscrow') return buyerMethod === '預計匯入履保' && !buyerEscrow || buyerMethod === '預計入履保' && !buyerEscrow;
+          if(filterMode === 'buyerNotCompany') return buyerMethod === '預計匯款公司' && !buyerCompany;
+          return true;
+        })
+        .sort((a,b) => parseRocDateValue(b.handoverDate) - parseRocDateValue(a.handoverDate) || parseRocDateValue(b.dealDate) - parseRocDateValue(a.dealDate));
+      const everyOpen = visible.length > 0 && visible.every(item => expandedProgressIds.has(item.id));
+      if(everyOpen) visible.forEach(item => expandedProgressIds.delete(item.id));
+      else visible.forEach(item => expandedProgressIds.add(item.id));
+      render();
+    });
+  }
+
+  document.querySelectorAll('input, textarea, select').forEach(el => {
+    el.addEventListener('input', () => {
+      if(!el.id.startsWith('f_')) return;
+      if(el.id.toLowerCase().includes('date')) clearDateInvalid(el);
+      if(el.id === 'f_object') setObjectLiveTitle();
+      if(['f_totalPriceWan','f_sellerFeePercent','f_sellerFeeAmount','f_buyerFeePercent','f_buyerFeeAmount'].includes(el.id)){
+        refreshFeeFormula();
+        const rowKey = el.id.startsWith('f_buyer') ? 'buyerFeeConfirm' : 'sellerFeeConfirm';
+        markUpdated(rowKey);
+        if(el.id === 'f_sellerFeeAmount') markUpdated('sellerInvoice');
+        if(el.id === 'f_buyerFeeAmount') markUpdated('buyerInvoice');
+      }else{
+        const rowKey = Object.keys(ROW_GROUPS).find(key => ROW_GROUPS[key].includes(el.id));
+        if(rowKey) markUpdated(rowKey);
+        else persistLive();
+      }
+      refreshStatusUI();
+    });
+    el.addEventListener('blur', () => {
+      if(el.id.toLowerCase().includes('date')){
+        const raw = safeText(el.value).trim();
+        if(!raw){
+          clearDateInvalid(el);
+          const rowKey = Object.keys(ROW_GROUPS).find(key => ROW_GROUPS[key].includes(el.id));
+          if(rowKey) markUpdated(rowKey); else persistLive();
+          refreshStatusUI();
+          return;
+        }
+        const normalized = rocDateNormalize(raw);
+        if(isValidDateInput(normalized)){
+          el.value = normalized;
+          clearDateInvalid(el);
+          const rowKey = Object.keys(ROW_GROUPS).find(key => ROW_GROUPS[key].includes(el.id));
+          if(rowKey) markUpdated(rowKey); else persistLive();
+          refreshStatusUI();
+        }else{
+          setDateInvalid(el);
+        }
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-toggle]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.toggle;
+      if(key === 'splitSheet'){
+        toggleState.splitSheet = !toggleState.splitSheet;
+        markUpdated('splitSheet');
+      }
+      if(key === 'sellerProxyNone'){
+        toggleState.sellerProxyNone = !toggleState.sellerProxyNone;
+        persistLive();
+      }
+      if(key === 'buyerProxyNone'){
+        toggleState.buyerProxyNone = !toggleState.buyerProxyNone;
+        persistLive();
+      }
+      if(key === 'bossCheckNone'){
+        toggleState.bossCheckNone = !toggleState.bossCheckNone;
+        markUpdated('bossCheck');
+      }
+      if(key === 'sellerApproveDirect'){
+        toggleState.sellerApproveDirect = !toggleState.sellerApproveDirect;
+        if(toggleState.sellerApproveDirect){ toggleState.sellerApproveAccessory = false; toggleState.sellerApproveRent = false; }
+        markUpdated('sellerApprove');
+      }
+      if(key === 'sellerApproveAccessory'){
+        toggleState.sellerApproveAccessory = !toggleState.sellerApproveAccessory;
+        if(toggleState.sellerApproveAccessory){ toggleState.sellerApproveDirect = false; toggleState.sellerApproveRent = false; }
+        markUpdated('sellerApprove');
+      }
+      if(key === 'sellerApproveRent'){
+        toggleState.sellerApproveRent = !toggleState.sellerApproveRent;
+        if(toggleState.sellerApproveRent){ toggleState.sellerApproveDirect = false; toggleState.sellerApproveAccessory = false; }
+        markUpdated('sellerApprove');
+      }
+      if(key === 'sellerPayoutAccessory'){
+        toggleState.sellerPayoutAccessory = !toggleState.sellerPayoutAccessory;
+        markUpdated('sellerPayout');
+      }
+      if(key === 'sellerEscrowUploadAccessory'){
+        toggleState.sellerEscrowUploadAccessory = !toggleState.sellerEscrowUploadAccessory;
+        if(toggleState.sellerEscrowUploadAccessory) toggleState.sellerEscrowUploadRent = false;
+        markUpdated('sellerEscrowUpload');
+      }
+      if(key === 'sellerEscrowUploadRent'){
+        toggleState.sellerEscrowUploadRent = !toggleState.sellerEscrowUploadRent;
+        if(toggleState.sellerEscrowUploadRent) toggleState.sellerEscrowUploadAccessory = false;
+        markUpdated('sellerEscrowUpload');
+      }
+      if(key === 'sellerPaymentAccessory'){
+        toggleState.sellerPaymentAccessory = !toggleState.sellerPaymentAccessory;
+        markUpdated('sellerPayment');
+      }
+      if(key === 'sellerShotAccessory'){
+        toggleState.sellerShotAccessory = !toggleState.sellerShotAccessory;
+        markUpdated('sellerShot');
+      }
+      if(key === 'buyerPayoutAccessory'){
+        toggleState.buyerPayoutAccessory = !toggleState.buyerPayoutAccessory;
+        markUpdated('buyerPayout');
+      }
+      if(key === 'buyerEscrowUploadAccessory'){
+        toggleState.buyerEscrowUploadAccessory = !toggleState.buyerEscrowUploadAccessory;
+        if(toggleState.buyerEscrowUploadAccessory) toggleState.buyerEscrowUploadRent = false;
+        markUpdated('buyerEscrowUpload');
+      }
+      if(key === 'buyerEscrowUploadRent'){
+        toggleState.buyerEscrowUploadRent = !toggleState.buyerEscrowUploadRent;
+        if(toggleState.buyerEscrowUploadRent) toggleState.buyerEscrowUploadAccessory = false;
+        markUpdated('buyerEscrowUpload');
+      }
+      if(key === 'buyerPaymentAccessory'){
+        toggleState.buyerPaymentAccessory = !toggleState.buyerPaymentAccessory;
+        markUpdated('buyerPayment');
+      }
+      if(key === 'buyerShotAccessory'){
+        toggleState.buyerShotAccessory = !toggleState.buyerShotAccessory;
+        markUpdated('buyerShot');
+      }
+      if(key === 'devConfirmAccessory'){
+        toggleState.devConfirmAccessory = !toggleState.devConfirmAccessory;
+        markUpdated('devConfirm');
+      }
+      if(key === 'saleConfirmAccessory'){
+        toggleState.saleConfirmAccessory = !toggleState.saleConfirmAccessory;
+        markUpdated('saleConfirm');
+      }
+      refreshStatusUI();
+    });
+  });
+
+  document.querySelectorAll('[data-state]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const stateName = btn.dataset.state;
+      const value = btn.dataset.value;
+      if(stateName === 'voucherPrint'){
+        toggleState.voucherPrint = (toggleState.voucherPrint === value ? '' : value);
+        getEl('f_voucherPrintState').value = toggleState.voucherPrint;
+        markUpdated('voucherPrint');
+      }else if(stateName === 'sellerPayoutMethod'){
+        const hidden = getEl('f_sellerPayoutMethod');
+        hidden.value = hidden.value === value ? '' : value;
+        markUpdated('sellerPayout');
+      }else if(stateName === 'buyerPayoutMethod'){
+        const hidden = getEl('f_buyerPayoutMethod');
+        hidden.value = hidden.value === value ? '' : value;
+        markUpdated('buyerPayout');
+      }
+      refreshStatusUI();
+    });
+  });
+
+  setTopSync(localStorage.getItem(META_KEY) || (cases[0] && cases[0].updatedAt) || nowTaipei());
+  const draft = loadDraft();
+  if(draft) draftUpdatedText.textContent = `輸入更新：${localStorage.getItem(META_KEY) || nowTaipei()}`;
+  applyIncompleteFilter();
+  window.addEventListener('focus', () => {
+    const meta = loadSyncMeta();
+    if(meta.connected) syncRoundTrip('focus');
+  });
+  document.addEventListener('visibilitychange', () => {
+    const meta = loadSyncMeta();
+    if(meta.connected && document.visibilityState === 'visible') syncRoundTrip('visible');
+  });
+
+  const autoSyncMeta = loadSyncMeta();
+  if(autoSyncMeta.connected && autoSyncMeta.url && autoSyncMeta.key){
+    connectSupabase();
+  }
+
+  render();
+})();
+</script>
+
+
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  var modalShowAllBtn = document.getElementById('modalShowAllBtn');
+  var toggleIncompleteBtn = document.getElementById('toggleIncompleteBtn');
+
+  if(!modalShowAllBtn) return;
+
+  modalShowAllBtn.addEventListener('click', function(){
+    try{
+      // 核心邏輯：未做按鈕如果目前是 active，就直接再點一次，走原本頁面自己的切換流程
+      if(toggleIncompleteBtn && toggleIncompleteBtn.classList.contains('active')){
+        toggleIncompleteBtn.click();
+        return;
+      }
+
+      // 補強：有些版本不是靠 active，直接把常見篩選狀態都清掉
+      if(typeof showIncompleteOnly !== 'undefined') showIncompleteOnly = false;
+      if(typeof incompleteOnly !== 'undefined') incompleteOnly = false;
+      if(typeof currentFilterMode !== 'undefined') currentFilterMode = 'all';
+      if(typeof filterMode !== 'undefined') filterMode = 'all';
+
+      if(toggleIncompleteBtn){
+        toggleIncompleteBtn.classList.remove('active');
+        toggleIncompleteBtn.textContent = '未做';
+      }
+
+      if(typeof refreshModalView === 'function') refreshModalView();
+      if(typeof renderProgress === 'function') renderProgress();
+      if(typeof renderClosed === 'function') renderClosed();
+      if(typeof renderAll === 'function') renderAll();
+      if(typeof renderDraftPreview === 'function') renderDraftPreview();
+    }catch(e){
+      console.error(e);
+    }
+  });
+});
+</script>
+
+
+<script>
+(function(){
+  function applyFinalLayoutFixes(){
+    /* 1) 整頁所有日期框統一：可完整輸入 114/12/12 */
+    document.querySelectorAll('input.date-input').forEach(function(el){
+      el.style.width = '3cm';
+      el.style.minWidth = '3cm';
+      el.style.maxWidth = '3cm';
+      el.style.flex = '0 0 3cm';
+      el.style.textAlign = 'center';
+      el.setAttribute('size','9');
+      el.setAttribute('maxlength','9');
+    });
+
+    /* 2) 2. 回報王總申請賣方出款：三個按鈕中間固定 1 公分白色空格 */
+    var sellerRow = document.querySelector('.line-row[data-row="sellerApprove"]');
+    if(sellerRow){
+      var firstField = sellerRow.querySelector('.inline-field');
+      var dateInput = sellerRow.querySelector('#f_sellerApproveDate');
+      var btnDirect = sellerRow.querySelector('[data-toggle="sellerApproveDirect"]');
+      var btnRent = sellerRow.querySelector('[data-toggle="sellerApproveRent"]');
+      var btnAccessory = sellerRow.querySelector('[data-toggle="sellerApproveAccessory"]');
+
+      if(firstField){
+        firstField.style.display = 'flex';
+        firstField.style.alignItems = 'center';
+        firstField.style.flexWrap = 'nowrap';
+        firstField.style.gap = '0';
+      }
+      if(dateInput){
+        dateInput.style.width = '3cm';
+        dateInput.style.minWidth = '3cm';
+        dateInput.style.maxWidth = '3cm';
+        dateInput.style.flex = '0 0 3cm';
+        dateInput.style.marginRight = '1cm';
+      }
+      [btnDirect, btnRent, btnAccessory].forEach(function(btn){
+        if(!btn) return;
+        btn.style.width = 'auto';
+        btn.style.minWidth = '0';
+        btn.style.maxWidth = 'none';
+        btn.style.flex = '0 0 auto';
+        btn.style.paddingLeft = '14px';
+        btn.style.paddingRight = '14px';
+        btn.style.whiteSpace = 'nowrap';
+        btn.style.display = 'inline-flex';
+        btn.style.alignItems = 'center';
+        btn.style.justifyContent = 'center';
+      });
+      if(btnDirect) btnDirect.style.marginLeft = '0';
+      if(btnRent) btnRent.style.marginLeft = '1cm';
+      if(btnAccessory) btnAccessory.style.marginLeft = '1cm';
+    }
+
+    /* 3) 發票號碼框框寬多 2px */
+    document.querySelectorAll('.invoice-no-input').forEach(function(el){
+      el.style.width = 'calc(3cm + 2px)';
+      el.style.minWidth = 'calc(3cm + 2px)';
+      el.style.maxWidth = 'calc(3cm + 2px)';
+      el.style.flex = '0 0 calc(3cm + 2px)';
+    });
+
+    /* 4) 發票日期往前一點 */
+    document.querySelectorAll('.invoice-fields .inline-field:nth-child(3)').forEach(function(el){
+      el.style.marginLeft = '0.35cm';
+      el.style.marginRight = '0';
+    });
+
+    /* 5) 發票金額：輸入時不動，離開欄位才補千分位；再點進去先去掉逗號 */
+    function addThousands(raw){
+      var digits = String(raw || '').replace(/[^\d]/g,'');
+      if(!digits) return '';
+      return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+    function stripThousands(raw){
+      return String(raw || '').replace(/,/g,'');
+    }
+    ['f_sellerInvoiceAmount','f_buyerInvoiceAmount'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(!el || el.dataset.finalFormatBound === '1') return;
+      el.dataset.finalFormatBound = '1';
+      el.addEventListener('focus', function(){
+        el.value = stripThousands(el.value);
+      });
+      el.addEventListener('blur', function(){
+        el.value = addThousands(el.value);
+      });
+    });
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', applyFinalLayoutFixes);
+  }else{
+    applyFinalLayoutFixes();
+  }
+
+  new MutationObserver(function(){
+    applyFinalLayoutFixes();
+  }).observe(document.documentElement, {childList:true, subtree:true});
+})();
+</script>
+
+</body>
+</html>
