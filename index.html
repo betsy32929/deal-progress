@@ -3132,7 +3132,7 @@ tbody tr:hover td{background:#f5f9ff}
         if(filterMode === 'buyerNotCompany') return buyerMethod === '預計匯款公司' && !buyerCompany;
         return true;
       })
-      .sort((a,b) => parseRocDateValue(b.handoverDate) - parseRocDateValue(a.handoverDate) || parseRocDateValue(b.dealDate) - parseRocDateValue(a.dealDate));
+      .sort((a,b) => parseRocDateValue(a.handoverDate) - parseRocDateValue(b.handoverDate) || parseRocDateValue(a.dealDate) - parseRocDateValue(b.dealDate));
     const waitingClose = progressBase.filter(item => isWaitingCloseCase(item));
     const progress = progressBase.filter(item => !isWaitingCloseCase(item));
     const closed = cases
@@ -3326,7 +3326,7 @@ tbody tr:hover td{background:#f5f9ff}
           if(filterMode === 'buyerNotCompany') return buyerMethod === '預計匯款公司' && !buyerCompany;
           return true;
         })
-        .sort((a,b) => parseRocDateValue(b.handoverDate) - parseRocDateValue(a.handoverDate) || parseRocDateValue(b.dealDate) - parseRocDateValue(a.dealDate));
+        .sort((a,b) => parseRocDateValue(a.handoverDate) - parseRocDateValue(b.handoverDate) || parseRocDateValue(a.dealDate) - parseRocDateValue(b.dealDate));
       const everyOpen = visible.length > 0 && visible.every(item => expandedProgressIds.has(item.id));
       if(everyOpen) visible.forEach(item => expandedProgressIds.delete(item.id));
       else visible.forEach(item => expandedProgressIds.add(item.id));
