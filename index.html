@@ -1608,6 +1608,40 @@ tbody tr:hover td{background:#f5f9ff}
   .top-actions{justify-content:flex-start !important; width:100% !important;}
 }
 
+
+
+/* ===== vJSON-按鈕補強：新增案件視窗內按鈕可點選、選取明顯 ===== */
+.overlay.show .modal button,
+.overlay.show .modal .state-btn,
+.overlay.show .modal .small-action,
+.overlay.show .modal .rentcase-btn{
+  pointer-events:auto !important;
+  position:relative !important;
+  z-index:30 !important;
+  user-select:none !important;
+}
+.overlay.show .modal .inline-field,
+.overlay.show .modal .method-pack,
+.overlay.show .modal .state-group{
+  position:relative !important;
+  z-index:1 !important;
+}
+.overlay.show .modal input,
+.overlay.show .modal textarea,
+.overlay.show .modal select{
+  position:relative !important;
+  z-index:2 !important;
+}
+.overlay.show .modal button.active,
+.overlay.show .modal .state-btn.active,
+.overlay.show .modal .small-action.active,
+.overlay.show .modal .rentcase-btn.active{
+  background:#2f6fd6 !important;
+  color:#fff !important;
+  border-color:#2f6fd6 !important;
+  box-shadow:0 0 0 3px rgba(47,111,214,.16) !important;
+}
+
 </style>
 
 <style id="mobile-home-horizontal-scroll-fix">
@@ -2741,6 +2775,7 @@ tbody tr:hover td{background:#f5f9ff}
     toggleState.sellerProxyNone = false;
     toggleState.buyerProxyNone = false;
     toggleState.bossCheckNone = false;
+    toggleState.sellerApproveDirect = false;
     toggleState.sellerApproveAccessory = false;
     toggleState.sellerApproveRent = false;
     toggleState.sellerPayoutAccessory = false;
@@ -3577,6 +3612,111 @@ tbody tr:hover td{background:#f5f9ff}
       }
     });
   });
+
+
+  /* vJSON-按鈕補強：用視窗層級攔截，避免按鈕被版面覆蓋或原本事件漏綁 */
+  function handleModalToggleButton(btn){
+    const key = btn.dataset.toggle;
+    if(!key) return;
+    if(key === 'splitSheet'){
+      toggleState.splitSheet = !toggleState.splitSheet;
+      markUpdated('splitSheet');
+    }else if(key === 'sellerProxyNone'){
+      toggleState.sellerProxyNone = !toggleState.sellerProxyNone;
+      persistLive();
+    }else if(key === 'buyerProxyNone'){
+      toggleState.buyerProxyNone = !toggleState.buyerProxyNone;
+      persistLive();
+    }else if(key === 'bossCheckNone'){
+      toggleState.bossCheckNone = !toggleState.bossCheckNone;
+      markUpdated('bossCheck');
+    }else if(key === 'sellerApproveDirect'){
+      toggleState.sellerApproveDirect = !toggleState.sellerApproveDirect;
+      if(toggleState.sellerApproveDirect){ toggleState.sellerApproveAccessory = false; toggleState.sellerApproveRent = false; }
+      markUpdated('sellerApprove');
+    }else if(key === 'sellerApproveAccessory'){
+      toggleState.sellerApproveAccessory = !toggleState.sellerApproveAccessory;
+      if(toggleState.sellerApproveAccessory){ toggleState.sellerApproveDirect = false; toggleState.sellerApproveRent = false; }
+      markUpdated('sellerApprove');
+    }else if(key === 'sellerApproveRent'){
+      toggleState.sellerApproveRent = !toggleState.sellerApproveRent;
+      if(toggleState.sellerApproveRent){ toggleState.sellerApproveDirect = false; toggleState.sellerApproveAccessory = false; }
+      markUpdated('sellerApprove');
+    }else if(key === 'sellerPayoutAccessory'){
+      toggleState.sellerPayoutAccessory = !toggleState.sellerPayoutAccessory;
+      markUpdated('sellerPayout');
+    }else if(key === 'sellerEscrowUploadAccessory'){
+      toggleState.sellerEscrowUploadAccessory = !toggleState.sellerEscrowUploadAccessory;
+      if(toggleState.sellerEscrowUploadAccessory) toggleState.sellerEscrowUploadRent = false;
+      markUpdated('sellerEscrowUpload');
+    }else if(key === 'sellerEscrowUploadRent'){
+      toggleState.sellerEscrowUploadRent = !toggleState.sellerEscrowUploadRent;
+      if(toggleState.sellerEscrowUploadRent) toggleState.sellerEscrowUploadAccessory = false;
+      markUpdated('sellerEscrowUpload');
+    }else if(key === 'sellerPaymentAccessory'){
+      toggleState.sellerPaymentAccessory = !toggleState.sellerPaymentAccessory;
+      markUpdated('sellerPayment');
+    }else if(key === 'sellerShotAccessory'){
+      toggleState.sellerShotAccessory = !toggleState.sellerShotAccessory;
+      markUpdated('sellerShot');
+    }else if(key === 'buyerPayoutAccessory'){
+      toggleState.buyerPayoutAccessory = !toggleState.buyerPayoutAccessory;
+      markUpdated('buyerPayout');
+    }else if(key === 'buyerEscrowUploadAccessory'){
+      toggleState.buyerEscrowUploadAccessory = !toggleState.buyerEscrowUploadAccessory;
+      if(toggleState.buyerEscrowUploadAccessory) toggleState.buyerEscrowUploadRent = false;
+      markUpdated('buyerEscrowUpload');
+    }else if(key === 'buyerEscrowUploadRent'){
+      toggleState.buyerEscrowUploadRent = !toggleState.buyerEscrowUploadRent;
+      if(toggleState.buyerEscrowUploadRent) toggleState.buyerEscrowUploadAccessory = false;
+      markUpdated('buyerEscrowUpload');
+    }else if(key === 'buyerPaymentAccessory'){
+      toggleState.buyerPaymentAccessory = !toggleState.buyerPaymentAccessory;
+      markUpdated('buyerPayment');
+    }else if(key === 'buyerShotAccessory'){
+      toggleState.buyerShotAccessory = !toggleState.buyerShotAccessory;
+      markUpdated('buyerShot');
+    }else if(key === 'devConfirmAccessory'){
+      toggleState.devConfirmAccessory = !toggleState.devConfirmAccessory;
+      markUpdated('devConfirm');
+    }else if(key === 'saleConfirmAccessory'){
+      toggleState.saleConfirmAccessory = !toggleState.saleConfirmAccessory;
+      markUpdated('saleConfirm');
+    }
+    refreshStatusUI();
+  }
+
+  function handleModalStateButton(btn){
+    const stateName = btn.dataset.state;
+    const value = btn.dataset.value;
+    if(stateName === 'voucherPrint'){
+      toggleState.voucherPrint = (toggleState.voucherPrint === value ? '' : value);
+      getEl('f_voucherPrintState').value = toggleState.voucherPrint;
+      markUpdated('voucherPrint');
+    }else if(stateName === 'sellerPayoutMethod'){
+      const hidden = getEl('f_sellerPayoutMethod');
+      hidden.value = hidden.value === value ? '' : value;
+      markUpdated('sellerPayout');
+    }else if(stateName === 'buyerPayoutMethod'){
+      const hidden = getEl('f_buyerPayoutMethod');
+      hidden.value = hidden.value === value ? '' : value;
+      markUpdated('buyerPayout');
+    }
+    refreshStatusUI();
+  }
+
+  if(overlay && !overlay.dataset.modalButtonFix){
+    overlay.dataset.modalButtonFix = '1';
+    overlay.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-toggle], button[data-state]');
+      if(!btn || !overlay.contains(btn)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+      if(btn.hasAttribute('data-toggle')) handleModalToggleButton(btn);
+      else if(btn.hasAttribute('data-state')) handleModalStateButton(btn);
+    }, true);
+  }
 
   document.querySelectorAll('[data-toggle]').forEach(btn => {
     btn.addEventListener('click', () => {
