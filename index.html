@@ -1570,6 +1570,44 @@ tbody tr:hover td{background:#f5f9ff}
   }
 }
 
+
+
+/* ===== JSON 按鈕顯示修正：避免被後段 btn-secondary 白字樣式蓋掉 ===== */
+#exportJsonBtn,
+#importJsonBtn{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  height:42px !important;
+  min-width:98px !important;
+  padding:0 16px !important;
+  border-radius:999px !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  font-weight:900 !important;
+  color:#24486d !important;
+  background:linear-gradient(135deg,#fff7e8 0%, #ffe0aa 100%) !important;
+  border:1px solid #efc777 !important;
+  box-shadow:0 8px 18px rgba(198,131,36,.13) !important;
+}
+#importJsonBtn{
+  background:linear-gradient(135deg,#eefaf5 0%, #cfeedd 100%) !important;
+  border-color:#abdcc1 !important;
+  color:#1f684f !important;
+}
+#exportJsonBtn:hover,
+#importJsonBtn:hover{
+  transform:translateY(-1px);
+  filter:brightness(.99);
+}
+.top-actions{
+  overflow:visible !important;
+}
+@media (max-width:1280px){
+  .top-row{align-items:flex-start !important;}
+  .top-actions{justify-content:flex-start !important; width:100% !important;}
+}
+
 </style>
 
 <style id="mobile-home-horizontal-scroll-fix">
@@ -1578,6 +1616,44 @@ tbody tr:hover td{background:#f5f9ff}
   body{min-width:1180px;}
   .container{min-width:1140px;}
 }
+
+
+/* ===== JSON 按鈕顯示修正：避免被後段 btn-secondary 白字樣式蓋掉 ===== */
+#exportJsonBtn,
+#importJsonBtn{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  height:42px !important;
+  min-width:98px !important;
+  padding:0 16px !important;
+  border-radius:999px !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  font-weight:900 !important;
+  color:#24486d !important;
+  background:linear-gradient(135deg,#fff7e8 0%, #ffe0aa 100%) !important;
+  border:1px solid #efc777 !important;
+  box-shadow:0 8px 18px rgba(198,131,36,.13) !important;
+}
+#importJsonBtn{
+  background:linear-gradient(135deg,#eefaf5 0%, #cfeedd 100%) !important;
+  border-color:#abdcc1 !important;
+  color:#1f684f !important;
+}
+#exportJsonBtn:hover,
+#importJsonBtn:hover{
+  transform:translateY(-1px);
+  filter:brightness(.99);
+}
+.top-actions{
+  overflow:visible !important;
+}
+@media (max-width:1280px){
+  .top-row{align-items:flex-start !important;}
+  .top-actions{justify-content:flex-start !important; width:100% !important;}
+}
+
 </style>
 </head>
 <body>
@@ -1589,6 +1665,9 @@ tbody tr:hover td{background:#f5f9ff}
         <div class="top-actions">
           <button class="btn btn-primary" id="addCaseBtn" type="button">新增案件</button>
           <button class="btn btn-secondary" id="exportBtn" type="button">匯出Excel</button>
+          <button class="btn btn-secondary" id="exportJsonBtn" type="button">匯出JSON</button>
+          <button class="btn btn-secondary" id="importJsonBtn" type="button">匯入JSON</button>
+          <input id="importJsonInput" type="file" accept="application/json,.json" style="display:none" />
           <div class="chip-row">
             <span class="chip-inline saved">已自動存檔</span>
             <span class="chip-inline sync" id="topSyncText">最後同步時間：2026/03/31 00:58</span>
@@ -2047,7 +2126,7 @@ tbody tr:hover td{background:#f5f9ff}
 
   const overlay = document.getElementById('overlay');
   const modalTitle = document.getElementById('modalTitle');
-  const draftUpdatedText = document.getElementById('draftUpdatedText');
+  const draftUpdatedText = document.getElementById('draftUpdatedText') || { textContent:'' };
   const toggleIncompleteBtn = document.getElementById('toggleIncompleteBtn');
   const objectLiveTitle = document.getElementById('objectLiveTitle');
   const progressBody = document.getElementById('progressBody');
@@ -2413,6 +2492,26 @@ tbody tr:hover td{background:#f5f9ff}
   function clearDraft(){ localStorage.removeItem(DRAFT_KEY); }
 
   function safeText(v){ return v == null ? '' : String(v); }
+  function safeRandomId(){
+    if(window.crypto && typeof window.crypto.randomUUID === 'function'){
+      return window.crypto.randomUUID();
+    }
+    return 'case_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+  }
+
+  function scrollModalToTop(){
+    const modal = document.querySelector('.modal');
+    const modalBody = document.querySelector('.modal-body');
+    if(modal) modal.scrollTop = 0;
+    if(modalBody) modalBody.scrollTop = 0;
+    if(overlay) overlay.scrollTop = 0;
+    window.requestAnimationFrame(() => {
+      if(modal) modal.scrollTop = 0;
+      if(modalBody) modalBody.scrollTop = 0;
+      if(overlay) overlay.scrollTop = 0;
+    });
+  }
+
 
   function rocDateNormalize(raw){
     const value = safeText(raw).trim();
@@ -2667,7 +2766,7 @@ tbody tr:hover td{background:#f5f9ff}
   function buildRecordFromData(data, existing){
     const base = existing || {};
     return {
-      id: base.id || crypto.randomUUID(),
+      id: base.id || safeRandomId(),
       object: data.f_object || '',
       dealDate: data.f_dealDate || '',
       handoverDate: data.f_handoverDate || '',
@@ -2869,10 +2968,11 @@ tbody tr:hover td{background:#f5f9ff}
 
   function openModal(mode='new', record=null){
     overlay.classList.add('show');
+    scrollModalToTop();
     if(mode === 'edit' && record){
       editingId = record.id;
       fillForm(record.form || {});
-      if(draftUpdatedText) draftUpdatedText.textContent = `輸入更新：${record.updatedAt || '--'}`;
+      draftUpdatedText.textContent = `輸入更新：${record.updatedAt || '--'}`;
     }else{
       resetForm();
       const draft = loadDraft();
@@ -2883,6 +2983,7 @@ tbody tr:hover td{background:#f5f9ff}
       saveCases(true);
       clearDraft();
     }
+    scrollModalToTop();
   }
 
   function closeModal(){
@@ -3163,6 +3264,91 @@ tbody tr:hover td{background:#f5f9ff}
     bindRowActions();
   }
 
+  function exportJsonFile(){
+    const payload = {
+      app: '成交進度',
+      exportedAt: nowTaipei(),
+      storageKey: STORAGE_KEY,
+      cases: Array.isArray(cases) ? cases : []
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `成交進度備份_${nowTaipei().replace(/[\/: ]/g,'')}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function normalizeImportedCases(raw){
+    if(Array.isArray(raw)) return raw;
+    if(raw && Array.isArray(raw.cases)) return raw.cases;
+    if(raw && raw.payload){
+      if(Array.isArray(raw.payload)) return raw.payload;
+      if(Array.isArray(raw.payload.cases)) return raw.payload.cases;
+    }
+    return null;
+  }
+
+  async function importJsonFile(file){
+    if(!file) return;
+    try{
+      const rawText = await file.text();
+      const parsed = JSON.parse(rawText);
+      const importedCases = normalizeImportedCases(parsed);
+      if(!Array.isArray(importedCases)){
+        window.alert('匯入失敗：這個 JSON 檔沒有找到案件資料。');
+        return;
+      }
+      const ok = window.confirm(`確定匯入 ${importedCases.length} 筆案件嗎？\n\n匯入後會取代目前畫面資料，建議先匯出 JSON 備份。`);
+      if(!ok) return;
+      cases = importedCases.map(item => {
+        const form = item.form || {};
+        const id = item.id || safeRandomId();
+        const object = item.object || form.f_object || '';
+        const dealDate = item.dealDate || form.f_dealDate || '';
+        const handoverDate = item.handoverDate || form.f_handoverDate || '';
+        const closeDate = item.archivedAt || form.f_closeDate || '';
+        return {
+          ...item,
+          id,
+          object,
+          dealDate,
+          handoverDate,
+          totalPriceWan: item.totalPriceWan || form.f_totalPriceWan || '',
+          mainContract: item.mainContract || form.f_mainContract || '',
+          escrowAccount: item.escrowAccount || form.f_escrowAccount || '',
+          notary: item.notary || form.f_notary || '',
+          notaryAssistant: item.notaryAssistant || form.f_notaryAssistant || '',
+          devAgent: item.devAgent || form.f_devAgent || '',
+          saleAgent: item.saleAgent || form.f_saleAgent || '',
+          sellerName: item.sellerName || form.f_sellerName || '',
+          sellerProxy: item.sellerProxy || form.f_sellerProxy || '',
+          buyerName: item.buyerName || form.f_buyerName || '',
+          buyerProxy: item.buyerProxy || form.f_buyerProxy || '',
+          status: item.status || (safeText(closeDate).trim() ? '已結案' : '進行中'),
+          createdAt: item.createdAt || nowTaipei(),
+          updatedAt: item.updatedAt || nowTaipei(),
+          archivedAt: closeDate,
+          form: form
+        };
+      });
+      clearDraft();
+      editingId = null;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
+      markLocalChanged();
+      touchSync();
+      scheduleAutoSync();
+      render();
+      window.alert(`已匯入 ${cases.length} 筆案件。`);
+    }catch(err){
+      console.error(err);
+      window.alert('匯入失敗：JSON 檔案格式無法讀取。');
+    }
+  }
+
   function saveCurrentRecord(){
     const data = collectForm();
     const existing = editingId ? cases.find(item => item.id === editingId) : null;
@@ -3212,8 +3398,10 @@ tbody tr:hover td{background:#f5f9ff}
     }
   });
 
-  document.getElementById('addCaseBtn').addEventListener('click', () => openModal('new'));
-  document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+  const addCaseBtn = document.getElementById('addCaseBtn');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+  if(addCaseBtn) addCaseBtn.addEventListener('click', () => openModal('new'));
+  if(closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
   if(toggleIncompleteBtn){
     toggleIncompleteBtn.addEventListener('click', () => {
       incompleteOnly = !incompleteOnly;
@@ -3223,7 +3411,8 @@ tbody tr:hover td{background:#f5f9ff}
   overlay.addEventListener('click', e => { if(e.target === overlay) closeModal(); });
   const saveBtn = document.getElementById('saveBtn');
   if(saveBtn) saveBtn.addEventListener('click', () => saveCurrentRecord());
-  document.getElementById('deleteBtn').addEventListener('click', () => {
+  const deleteBtn = document.getElementById('deleteBtn');
+  if(deleteBtn) deleteBtn.addEventListener('click', () => {
     const ok = window.confirm(editingId ? '確定要刪除這筆案件嗎？' : '確定要刪除這筆新增中的案件嗎？');
     if(!ok) return;
     if(editingId){
@@ -3235,7 +3424,8 @@ tbody tr:hover td{background:#f5f9ff}
     }
     closeModal();
   });
-  document.getElementById('exportBtn').addEventListener('click', () => {
+  const exportBtn = document.getElementById('exportBtn');
+  if(exportBtn) exportBtn.addEventListener('click', () => {
     if(!window.XLSX){
       window.alert('Excel 模組尚未載入，請重新整理後再試。');
       return;
@@ -3275,6 +3465,18 @@ tbody tr:hover td{background:#f5f9ff}
     XLSX.utils.book_append_sheet(wb, closedSheet, '已結案');
     XLSX.writeFile(wb, `成交進度匯出_${nowTaipei().replace(/[\/: ]/g,'')}.xlsx`);
   });
+  const exportJsonBtn = document.getElementById('exportJsonBtn');
+  const importJsonBtn = document.getElementById('importJsonBtn');
+  const importJsonInput = document.getElementById('importJsonInput');
+  if(exportJsonBtn) exportJsonBtn.addEventListener('click', exportJsonFile);
+  if(importJsonBtn && importJsonInput){
+    importJsonBtn.addEventListener('click', () => {
+      importJsonInput.value = '';
+      importJsonInput.click();
+    });
+    importJsonInput.addEventListener('change', () => importJsonFile(importJsonInput.files && importJsonInput.files[0]));
+  }
+
   [progressSearchObject,progressSearchNotary,progressSearchAgent,progressSearchEscrow,progressSearchAmount,closedSearchObject,closedSearchNotary,closedSearchAgent,closedSearchEscrow,closedSearchAmount].forEach(el => el && el.addEventListener('input', render));
   if(progressFilter) progressFilter.addEventListener('change', render);
   if(progressClearBtn){
