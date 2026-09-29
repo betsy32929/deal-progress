@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>成交進度 V1</title>
+<title>成交進度 V2</title>
 <style>
   :root{
     --bg:#f6f8fc;
@@ -1701,7 +1701,7 @@ tbody tr:hover td{background:#f5f9ff}
     <div class="top-stripe"></div>
     <div class="top-inner">
       <div class="top-row">
-        <div class="title">成交進度 V1</div>
+        <div class="title">成交進度 V2</div>
         <div class="top-actions">
           <button class="btn btn-primary" id="addCaseBtn" type="button">新增案件</button>
           <button class="btn btn-secondary" id="exportBtn" type="button">匯出Excel</button>
@@ -1940,7 +1940,7 @@ tbody tr:hover td{background:#f5f9ff}
 
               <div class="line-row date-inline" data-row="reportPerformance">
                 <div class="line-label">2. 申報台慶業績</div>
-                <div class="inline-field"><label>日期</label><input class="date-input" id="f_reportPerformanceDate" placeholder="3/13" /></div>
+                <div class="inline-field"><label>日期</label><input class="date-input" id="f_reportPerformanceDate" placeholder="3/13" /><button class="small-action primary" type="button" data-toggle="reportPerformanceNone">無</button></div>
                 <div class="inline-field"><label>備註</label><input id="f_reportPerformanceNote" class="wide-inline" /></div>
                 <div><span class="status-badge pending" id="status_reportPerformance">未做</span></div>
                 <div class="line-update" id="updated_reportPerformance">最後更新：--</div>
@@ -2005,7 +2005,7 @@ tbody tr:hover td{background:#f5f9ff}
 
               <div class="line-row date-inline" data-row="sellerShot">
                 <div class="line-label">6. 賣方入款截圖</div>
-                <div class="inline-field"><label>日期</label><input class="date-input" id="f_sellerShotDate" placeholder="3/13" /><button class="small-action primary" type="button" data-toggle="sellerShotAccessory">配件</button></div>
+                <div class="inline-field"><label>日期</label><input class="date-input" id="f_sellerShotDate" placeholder="3/13" /><button class="small-action primary" type="button" data-toggle="sellerShotAccessory">配件</button><button class="small-action primary" type="button" data-toggle="sellerShotNone">無</button></div>
                 <div class="inline-field"><label>備註</label><input id="f_sellerShotNote" class="wide-inline" /></div>
                 <div><span class="status-badge pending" id="status_sellerShot">未做</span></div>
                 <div class="line-update" id="updated_sellerShot">最後更新：--</div>
@@ -2245,6 +2245,7 @@ tbody tr:hover td{background:#f5f9ff}
     sellerProxyNone:false,
     buyerProxyNone:false,
     bossCheckNone:false,
+    reportPerformanceNone:false,
     sellerApproveDirect:false,
     sellerApproveAccessory:false,
     sellerApproveRent:false,
@@ -2253,6 +2254,7 @@ tbody tr:hover td{background:#f5f9ff}
     sellerEscrowUploadRent:false,
     sellerPaymentAccessory:false,
     sellerShotAccessory:false,
+    sellerShotNone:false,
     buyerPayoutAccessory:false,
     buyerEscrowUploadAccessory:false,
     buyerEscrowUploadRent:false,
@@ -2766,6 +2768,7 @@ tbody tr:hover td{background:#f5f9ff}
     toggleState.sellerProxyNone = !!savedToggle.sellerProxyNone;
     toggleState.buyerProxyNone = !!savedToggle.buyerProxyNone;
     toggleState.bossCheckNone = !!savedToggle.bossCheckNone;
+    toggleState.reportPerformanceNone = !!savedToggle.reportPerformanceNone;
     toggleState.sellerApproveDirect = !!savedToggle.sellerApproveDirect;
     toggleState.sellerApproveAccessory = !!savedToggle.sellerApproveAccessory;
     toggleState.sellerApproveRent = !!savedToggle.sellerApproveRent;
@@ -2774,6 +2777,7 @@ tbody tr:hover td{background:#f5f9ff}
     toggleState.sellerEscrowUploadRent = !!savedToggle.sellerEscrowUploadRent;
     toggleState.sellerPaymentAccessory = !!savedToggle.sellerPaymentAccessory;
     toggleState.sellerShotAccessory = !!savedToggle.sellerShotAccessory;
+    toggleState.sellerShotNone = !!savedToggle.sellerShotNone;
     toggleState.buyerPayoutAccessory = !!savedToggle.buyerPayoutAccessory;
     toggleState.buyerEscrowUploadAccessory = !!savedToggle.buyerEscrowUploadAccessory;
     toggleState.buyerEscrowUploadRent = !!savedToggle.buyerEscrowUploadRent;
@@ -2803,6 +2807,7 @@ tbody tr:hover td{background:#f5f9ff}
     toggleState.sellerProxyNone = false;
     toggleState.buyerProxyNone = false;
     toggleState.bossCheckNone = false;
+    toggleState.reportPerformanceNone = false;
     toggleState.sellerApproveDirect = false;
     toggleState.sellerApproveAccessory = false;
     toggleState.sellerApproveRent = false;
@@ -2811,6 +2816,7 @@ tbody tr:hover td{background:#f5f9ff}
     toggleState.sellerEscrowUploadRent = false;
     toggleState.sellerPaymentAccessory = false;
     toggleState.sellerShotAccessory = false;
+    toggleState.sellerShotNone = false;
     toggleState.buyerPayoutAccessory = false;
     toggleState.buyerEscrowUploadAccessory = false;
     toggleState.buyerEscrowUploadRent = false;
@@ -2930,14 +2936,14 @@ tbody tr:hover td{background:#f5f9ff}
     const hasAny = ids => ids.some(id => !!getEl(id).value.trim());
 
     setStatusBadge('status_bossCheck', (hasValue('f_bossCheckDate') || toggleState.bossCheckNone) ? 'done' : 'pending', (hasValue('f_bossCheckDate') || toggleState.bossCheckNone) ? '已完成' : '未做');
-    setStatusBadge('status_reportPerformance', hasValue('f_reportPerformanceDate') ? 'done' : 'pending', hasValue('f_reportPerformanceDate') ? '已完成' : '未做');
+    setStatusBadge('status_reportPerformance', (hasValue('f_reportPerformanceDate') || toggleState.reportPerformanceNone) ? 'done' : 'pending', (hasValue('f_reportPerformanceDate') || toggleState.reportPerformanceNone) ? '已完成' : '未做');
 
     setStatusBadge('status_sellerFeeConfirm', hasAny(['f_sellerFeePercent','f_sellerFeeAmount']) ? 'done' : 'pending', hasAny(['f_sellerFeePercent','f_sellerFeeAmount']) ? '完成' : '未做');
     setStatusBadge('status_sellerApprove', (hasValue('f_sellerApproveDate') || toggleState.sellerApproveDirect || toggleState.sellerApproveAccessory || toggleState.sellerApproveRent) ? 'done' : 'pending', (hasValue('f_sellerApproveDate') || toggleState.sellerApproveDirect || toggleState.sellerApproveAccessory || toggleState.sellerApproveRent) ? '完成' : '未做');
     setStatusBadge('status_sellerPayout', (hasValue('f_sellerPayoutMethod') || toggleState.sellerPayoutAccessory) ? 'done' : 'pending', (hasValue('f_sellerPayoutMethod') || toggleState.sellerPayoutAccessory) ? '完成' : '未做');
     setStatusBadge('status_sellerEscrowUpload', (hasValue('f_sellerEscrowUploadDate') || toggleState.sellerEscrowUploadAccessory || toggleState.sellerEscrowUploadRent) ? 'done' : 'pending', (hasValue('f_sellerEscrowUploadDate') || toggleState.sellerEscrowUploadAccessory || toggleState.sellerEscrowUploadRent) ? '完成' : '未做');
     setStatusBadge('status_sellerPayment', (hasValue('f_sellerPaymentDate') || toggleState.sellerPaymentAccessory) ? 'done' : 'pending', (hasValue('f_sellerPaymentDate') || toggleState.sellerPaymentAccessory) ? '完成' : '未做');
-    setStatusBadge('status_sellerShot', (hasValue('f_sellerShotDate') || toggleState.sellerShotAccessory) ? 'done' : 'pending', (hasValue('f_sellerShotDate') || toggleState.sellerShotAccessory) ? '完成' : '未做');
+    setStatusBadge('status_sellerShot', (hasValue('f_sellerShotDate') || toggleState.sellerShotAccessory || toggleState.sellerShotNone) ? 'done' : 'pending', (hasValue('f_sellerShotDate') || toggleState.sellerShotAccessory || toggleState.sellerShotNone) ? '完成' : '未做');
 
     setStatusBadge('status_buyerFeeConfirm', hasAny(['f_buyerFeePercent','f_buyerFeeAmount']) ? 'done' : 'pending', hasAny(['f_buyerFeePercent','f_buyerFeeAmount']) ? '完成' : '未做');
     setStatusBadge('status_buyerPayout', (hasValue('f_buyerPayoutMethod') || toggleState.buyerPayoutAccessory) ? 'done' : 'pending', (hasValue('f_buyerPayoutMethod') || toggleState.buyerPayoutAccessory) ? '完成' : '未做');
@@ -2961,6 +2967,7 @@ tbody tr:hover td{background:#f5f9ff}
     document.querySelectorAll('[data-toggle="sellerProxyNone"]').forEach(btn => btn.classList.toggle('active', !!toggleState.sellerProxyNone));
     document.querySelectorAll('[data-toggle="buyerProxyNone"]').forEach(btn => btn.classList.toggle('active', !!toggleState.buyerProxyNone));
     document.querySelectorAll('[data-toggle="bossCheckNone"]').forEach(btn => btn.classList.toggle('active', !!toggleState.bossCheckNone));
+    document.querySelectorAll('[data-toggle="reportPerformanceNone"]').forEach(btn => btn.classList.toggle('active', !!toggleState.reportPerformanceNone));
     document.querySelectorAll('[data-toggle="sellerApproveDirect"]').forEach(btn => btn.classList.toggle('active', !!toggleState.sellerApproveDirect));
     document.querySelectorAll('[data-toggle="sellerApproveAccessory"]').forEach(btn => btn.classList.toggle('active', !!toggleState.sellerApproveAccessory));
     document.querySelectorAll('[data-toggle="sellerApproveRent"]').forEach(btn => btn.classList.toggle('active', !!toggleState.sellerApproveRent));
@@ -2969,6 +2976,7 @@ tbody tr:hover td{background:#f5f9ff}
     document.querySelectorAll('[data-toggle="sellerEscrowUploadRent"]').forEach(btn => btn.classList.toggle('active', !!toggleState.sellerEscrowUploadRent));
     document.querySelectorAll('[data-toggle="sellerPaymentAccessory"]').forEach(btn => btn.classList.toggle('active', !!toggleState.sellerPaymentAccessory));
     document.querySelectorAll('[data-toggle="sellerShotAccessory"]').forEach(btn => btn.classList.toggle('active', !!toggleState.sellerShotAccessory));
+    document.querySelectorAll('[data-toggle="sellerShotNone"]').forEach(btn => btn.classList.toggle('active', !!toggleState.sellerShotNone));
     document.querySelectorAll('[data-toggle="buyerPayoutAccessory"]').forEach(btn => btn.classList.toggle('active', !!toggleState.buyerPayoutAccessory));
     document.querySelectorAll('[data-toggle="buyerEscrowUploadAccessory"]').forEach(btn => btn.classList.toggle('active', !!toggleState.buyerEscrowUploadAccessory));
     document.querySelectorAll('[data-toggle="buyerEscrowUploadRent"]').forEach(btn => btn.classList.toggle('active', !!toggleState.buyerEscrowUploadRent));
@@ -3659,6 +3667,9 @@ tbody tr:hover td{background:#f5f9ff}
     }else if(key === 'bossCheckNone'){
       toggleState.bossCheckNone = !toggleState.bossCheckNone;
       markUpdated('bossCheck');
+    }else if(key === 'reportPerformanceNone'){
+      toggleState.reportPerformanceNone = !toggleState.reportPerformanceNone;
+      markUpdated('reportPerformance');
     }else if(key === 'sellerApproveDirect'){
       toggleState.sellerApproveDirect = !toggleState.sellerApproveDirect;
       if(toggleState.sellerApproveDirect){ toggleState.sellerApproveAccessory = false; toggleState.sellerApproveRent = false; }
@@ -3687,6 +3698,11 @@ tbody tr:hover td{background:#f5f9ff}
       markUpdated('sellerPayment');
     }else if(key === 'sellerShotAccessory'){
       toggleState.sellerShotAccessory = !toggleState.sellerShotAccessory;
+      if(toggleState.sellerShotAccessory) toggleState.sellerShotNone = false;
+      markUpdated('sellerShot');
+    }else if(key === 'sellerShotNone'){
+      toggleState.sellerShotNone = !toggleState.sellerShotNone;
+      if(toggleState.sellerShotNone) toggleState.sellerShotAccessory = false;
       markUpdated('sellerShot');
     }else if(key === 'buyerPayoutAccessory'){
       toggleState.buyerPayoutAccessory = !toggleState.buyerPayoutAccessory;
@@ -3766,6 +3782,10 @@ tbody tr:hover td{background:#f5f9ff}
         toggleState.bossCheckNone = !toggleState.bossCheckNone;
         markUpdated('bossCheck');
       }
+      if(key === 'reportPerformanceNone'){
+        toggleState.reportPerformanceNone = !toggleState.reportPerformanceNone;
+        markUpdated('reportPerformance');
+      }
       if(key === 'sellerApproveDirect'){
         toggleState.sellerApproveDirect = !toggleState.sellerApproveDirect;
         if(toggleState.sellerApproveDirect){ toggleState.sellerApproveAccessory = false; toggleState.sellerApproveRent = false; }
@@ -3801,6 +3821,12 @@ tbody tr:hover td{background:#f5f9ff}
       }
       if(key === 'sellerShotAccessory'){
         toggleState.sellerShotAccessory = !toggleState.sellerShotAccessory;
+        if(toggleState.sellerShotAccessory) toggleState.sellerShotNone = false;
+        markUpdated('sellerShot');
+      }
+      if(key === 'sellerShotNone'){
+        toggleState.sellerShotNone = !toggleState.sellerShotNone;
+        if(toggleState.sellerShotNone) toggleState.sellerShotAccessory = false;
         markUpdated('sellerShot');
       }
       if(key === 'buyerPayoutAccessory'){
