@@ -16251,7 +16251,7 @@ supabaseButtonV1399.addEventListener('click',openSupabaseSettingsV1399);
 supabaseDialogV1399.addEventListener('click',event=>{const button=event.target.closest('button');if(!button)return;const form=supabaseDialogV1399.querySelector('form');if(button.hasAttribute('data-sb-close'))supabaseDialogV1399.close();if(button.hasAttribute('data-sb-toggle')){const field=form.elements.key,show=field.type==='password';field.type=show?'text':'password';button.textContent=show?'隱藏':'顯示';field.focus();}if(button.hasAttribute('data-sb-clear')){form.reset();localStorage.removeItem(supabaseSettingsKeyV1399);form.querySelector('.sb-error').textContent='已清除本機設定';}});
 supabaseDialogV1399.querySelector('form').addEventListener('submit',event=>{event.preventDefault();const form=event.currentTarget,url=String(form.elements.url.value||'').trim().replace(/\/$/,''),key=String(form.elements.key.value||'').trim(),error=form.querySelector('.sb-error');error.textContent='';if(url&&!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url)){error.textContent='URL 格式不正確，應為 https://專案名稱.supabase.co';return}if(/service_role|sb_secret_/i.test(key)){error.textContent='這是管理密鑰，不能放在網頁。請改用 Publishable Key。';return}if((url&&!key)||(!url&&key)){error.textContent='URL 與 Publishable Key 必須一起填寫。';return}try{localStorage.setItem(supabaseSettingsKeyV1399,JSON.stringify({url,key}));supabaseDialogV1399.close();toast?.('Supabase 設定已儲存於本機');}catch(_){error.textContent='瀏覽器無法儲存設定，請確認儲存空間。';}});
 /* V1401: authenticated Supabase cloud synchronization. */
-const cloudDefaultConfigV1401={url:'https://oiywtmjbasoonfuxemtr.supabase.co',key:'sb_publishable_dhr81918k0zRtar14yepIA_ZWmTKT10'};
+const cloudDefaultConfigV1401={url:'',key:''};
 if(!readSupabaseSettingsV1399().url&&!readSupabaseSettingsV1399().key)localStorage.setItem(supabaseSettingsKeyV1399,JSON.stringify(cloudDefaultConfigV1401));
 const cloudSessionKeyV1401='deal-progress-supabase-session-v1';
 const cloudFingerprintKeyV1401='deal-progress-cloud-fingerprint-v1';
@@ -16284,10 +16284,17 @@ cloudLoginBoxV1401.addEventListener('click',event=>{if(event.target.closest('[da
 const openSupabaseBeforeV1401=openSupabaseSettingsV1399;openSupabaseSettingsV1399=function(){const saved=readSupabaseSettingsV1399();if(!saved.url&&!saved.key)localStorage.setItem(supabaseSettingsKeyV1399,JSON.stringify(cloudDefaultConfigV1401));openSupabaseBeforeV1401();};
 if(cloudSessionV1401())cloudInitialSyncV1401().catch(error=>cloudSetStatusV1401(error.message,'error'));
 cloudHandleRecoveryV1402();
-document.querySelector('.app-version').textContent='V1402';
-document.querySelector('title').textContent='成交管理 V1402・彩虹版';
-Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1402・彩虹版'},set(){}});
-document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402');
+/* V1403: key-only cloud sync, no account password. */
+cloudLoginBoxV1401.remove();cloudResetDialogV1402.remove();cloudSaveSessionV1401(null);
+cloudSessionV1401=function(){const cfg=cloudConfigV1401();return cfg.url&&cfg.key?{key_only:true}:null};
+cloudRefreshSessionV1401=async function(){return cloudSessionV1401()};
+cloudAuthFetchV1401=async function(path,options={}){const cfg=cloudConfigV1401();if(!cfg.url||!cfg.key)throw Error('請先設定 Supabase URL 和 Publishable Key');return fetch(cfg.url+path,{...options,headers:{apikey:cfg.key,'Content-Type':'application/json',...(options.headers||{})}})};
+supabaseDialogV1399.addEventListener('close',()=>{if(cloudSessionV1401())cloudInitialSyncV1401().catch(error=>cloudSetStatusV1401(error.message,'error'))});
+if(cloudSessionV1401())cloudInitialSyncV1401().catch(error=>cloudSetStatusV1401(error.message,'error'));else cloudSetStatusV1401('雲端：請設定 URL、KEY','');
+document.querySelector('.app-version').textContent='V1403';
+document.querySelector('title').textContent='成交管理 V1403・彩虹版';
+Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1403・彩虹版'},set(){}});
+document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403');
 </script>
 </body></html>
 
