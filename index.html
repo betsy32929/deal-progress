@@ -14079,7 +14079,7 @@ openBubblePrint=function(){bubbleBatchSelectedV1262=new Set(draft?.id?[draft.id]
 const bubbleRenderBeforeV1262=bubbleRender;
 bubbleRender=function(){const result=bubbleRenderBeforeV1262.apply(this,arguments);bubbleBatchRenderV1262();return result;};
 document.addEventListener('change',event=>{const input=event.target.closest('[data-bubble-batch-case-v1262]');if(!input)return;input.checked?bubbleBatchSelectedV1262.add(input.dataset.bubbleBatchCaseV1262):bubbleBatchSelectedV1262.delete(input.dataset.bubbleBatchCaseV1262);bubbleBatchCountV1262();});
-document.addEventListener('click',event=>{if(event.target.closest('[data-bubble-batch-all-v1262]')){bubbleBatchSelectedV1262=new Set(bubbleBatchCasesV1262().map(c=>c.id));bubbleRender();return;}if(event.target.closest('[data-bubble-batch-clear-v1262]')){bubbleBatchSelectedV1262=new Set(draft?.id?[draft.id]:[]);bubbleRender();}},true);
+document.addEventListener('click',event=>{if(event.target.closest('[data-bubble-batch-all-v1262]')){bubbleBatchSelectedV1262=new Set(bubbleBatchCasesV1262().map(c=>c.id));document.querySelectorAll('[data-bubble-batch-case-v1262]').forEach(input=>input.checked=bubbleBatchSelectedV1262.has(input.dataset.bubbleBatchCaseV1262));bubbleBatchCountV1262();return;}if(event.target.closest('[data-bubble-batch-clear-v1262]')){bubbleBatchSelectedV1262=new Set(draft?.id?[draft.id]:[]);document.querySelectorAll('[data-bubble-batch-case-v1262]').forEach(input=>input.checked=bubbleBatchSelectedV1262.has(input.dataset.bubbleBatchCaseV1262));bubbleBatchCountV1262();}},true);
 function bubbleBatchPrintHTMLV1262(cases){
  const doc=new DOMParser().parseFromString(bubblePrintHTML(), 'text/html'),sourceSheet=doc.querySelector('.bubble-sheet'),sourceTable=sourceSheet?.querySelector('.bubble-table');if(!sourceSheet||!sourceTable)throw Error('找不到冒泡本列印版型');
  const entered=bubbleTopMarginV233(),effective=entered+(Math.abs(entered-.5)<.000001?0:.2),perPage=Math.max(1,Math.floor((296-effective*10-2)/27));doc.body.replaceChildren();
@@ -14100,7 +14100,7 @@ openBubblePrint=function(){const eligible=bubbleBatchCasesV1262().some(item=>ite
 document.documentElement.classList.add('version-ready-v1263');
 </script>
 <script>// V1264: Bubble batch eligibility depends only on whether 已列印 was clicked.
-bubbleBatchCasesV1262=function(){return bubbleBatchCasesBeforeV1263.apply(this,arguments).filter(item=>!item?._printChecklist?.bubble?.done);};
+bubbleBatchCasesV1262=function(){return bubbleBatchCasesBeforeV1263.apply(this,arguments).filter(item=>!item?._printChecklist?.bubble?.done||String(item?.id)===String(draft?.id));};
 document.documentElement.classList.add('version-ready-v1264');
 </script>
 <script>// V1265: Clear all home search fields whenever a progress tab is selected.
@@ -16303,10 +16303,10 @@ serviceConfirmActionsStyleV1409.textContent=`
 #service-confirm-dialog .sc-actions [data-sc-print]:not([data-sc-partial512]):hover{background:#bd2830!important}
 `;
 document.head.append(serviceConfirmActionsStyleV1409);
-document.querySelector('.app-version').textContent='V1410';
-document.querySelector('title').textContent='成交管理 V1410・彩虹版';
-Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1410・彩虹版'},set(){}});
-document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410');
+document.querySelector('.app-version').textContent='V1411';
+document.querySelector('title').textContent='成交管理 V1411・彩虹版';
+Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1411・彩虹版'},set(){}});
+document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410','version-ready-v1411');
 </script>
 </body></html>
 
