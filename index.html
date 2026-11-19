@@ -16282,8 +16282,7 @@ cloudResetDialogV1402.addEventListener('click',async event=>{if(!event.target.cl
 function cloudHandleRecoveryV1402(){const params=new URLSearchParams(location.hash.slice(1));if(params.get('type')!=='recovery'||!params.get('access_token'))return;const session={access_token:params.get('access_token'),refresh_token:params.get('refresh_token'),expires_in:Number(params.get('expires_in'))||3600,expires_at:Math.floor(Date.now()/1000)+(Number(params.get('expires_in'))||3600)};cloudSaveSessionV1401(session);setTimeout(()=>cloudResetDialogV1402.showModal(),0)}
 cloudLoginBoxV1401.addEventListener('click',event=>{if(event.target.closest('[data-cloud-login-v1401]'))cloudLoginV1401().catch(error=>cloudSetStatusV1401(error.message,'error'));if(event.target.closest('[data-cloud-recover-v1402]'))cloudSendRecoveryV1402().catch(()=>cloudSetStatusV1401('重設信寄送失敗，請稍後再試','error'));if(event.target.closest('[data-cloud-logout-v1401]')){cloudSaveSessionV1401(null);cloudSetStatusV1401('雲端：已登出','')}});
 const openSupabaseBeforeV1401=openSupabaseSettingsV1399;openSupabaseSettingsV1399=function(){const saved=readSupabaseSettingsV1399();if(!saved.url&&!saved.key)localStorage.setItem(supabaseSettingsKeyV1399,JSON.stringify(cloudDefaultConfigV1401));openSupabaseBeforeV1401();};
-if(cloudSessionV1401())cloudInitialSyncV1401().catch(error=>cloudSetStatusV1401(error.message,'error'));
-cloudHandleRecoveryV1402();
+/* Key-only mode starts synchronization below; do not start the retired password session. */
 /* V1403: key-only cloud sync, no account password. */
 cloudLoginBoxV1401.remove();cloudResetDialogV1402.remove();cloudSaveSessionV1401(null);
 cloudSessionV1401=function(){const cfg=cloudConfigV1401();return cfg.url&&cfg.key?{key_only:true}:null};
@@ -16291,10 +16290,10 @@ cloudRefreshSessionV1401=async function(){return cloudSessionV1401()};
 cloudAuthFetchV1401=async function(path,options={}){const cfg=cloudConfigV1401();if(!cfg.url||!cfg.key)throw Error('請先設定 Supabase URL 和 Publishable Key');return fetch(cfg.url+path,{...options,headers:{apikey:cfg.key,'Content-Type':'application/json',...(options.headers||{})}})};
 supabaseDialogV1399.addEventListener('close',()=>{if(cloudSessionV1401())cloudInitialSyncV1401().catch(error=>cloudSetStatusV1401(error.message,'error'))});
 if(cloudSessionV1401())cloudInitialSyncV1401().catch(error=>cloudSetStatusV1401(error.message,'error'));else cloudSetStatusV1401('雲端：請設定 URL、KEY','');
-document.querySelector('.app-version').textContent='V1403';
-document.querySelector('title').textContent='成交管理 V1403・彩虹版';
-Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1403・彩虹版'},set(){}});
-document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403');
+document.querySelector('.app-version').textContent='V1404';
+document.querySelector('title').textContent='成交管理 V1404・彩虹版';
+Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1404・彩虹版'},set(){}});
+document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404');
 </script>
 </body></html>
 
