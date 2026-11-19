@@ -14073,7 +14073,7 @@ function bubbleBatchRenderV1262(){
  const cases=bubbleBatchCasesV1262(),host=document.createElement('div');host.className='bubble-batch-settings';host.innerHTML='<div class="bubble-batch-heading"><span>批次列印案件</span><small data-bubble-batch-count-v1262></small><button type="button" data-bubble-batch-all-v1262>全選</button><button type="button" data-bubble-batch-clear-v1262>只選本件</button></div><div class="bubble-batch-cases">'+cases.map(c=>'<label title="'+esc((c.dealDate||'')+' '+(c.name||''))+'"><input type="checkbox" data-bubble-batch-case-v1262="'+esc(c.id)+'" '+(bubbleBatchSelectedV1262.has(c.id)?'checked':'')+'><span>'+esc((c.dealDate?roc(c.dealDate).split(' ')[0]+'　':'')+(c.name||''))+'</span></label>').join('')+'</div>';
  body.prepend(host);bubbleBatchCountV1262();
 }
-function bubbleBatchCountV1262(){const count=$('bubble-dialog')?.querySelector('[data-bubble-batch-count-v1262]');if(count)count.textContent='已選 '+bubbleBatchSelectedV1262.size+' 件（依清單順序列印）';}
+function bubbleBatchCountV1262(){const count=$('bubble-dialog')?.querySelector('[data-bubble-batch-count-v1262]');if(count)count.textContent=bubbleBatchSelectedV1262.size?'已選 '+bubbleBatchSelectedV1262.size+' 件（依清單順序列印）':'已選 0 件（按「列印」可重印本件）';}
 const openBubblePrintBeforeV1262=openBubblePrint;
 openBubblePrint=function(){bubbleBatchSelectedV1262=new Set(draft?.id?[draft.id]:[]);return openBubblePrintBeforeV1262.apply(this,arguments);};
 const bubbleRenderBeforeV1262=bubbleRender;
@@ -14087,7 +14087,7 @@ function bubbleBatchPrintHTMLV1262(cases){
  const style=doc.createElement('style');style.textContent='.bubble-sheet{break-after:page;page-break-after:always}.bubble-sheet:last-child{break-after:auto;page-break-after:auto}.bubble-table{break-inside:avoid;page-break-inside:avoid}.bubble-value{color:#0000ff!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}';doc.head.append(style);return '<!doctype html>'+doc.documentElement.outerHTML;
 }
 document.addEventListener('click',async event=>{
- const button=event.target.closest('[data-bubble-print]');if(!button)return;event.preventDefault();event.stopImmediatePropagation();const selected=bubbleBatchCasesV1262().filter(c=>bubbleBatchSelectedV1262.has(c.id));if(!selected.length){toast('請至少選擇一件案件');return;}button.disabled=true;
+ const button=event.target.closest('[data-bubble-print]');if(!button)return;event.preventDefault();event.stopImmediatePropagation();let selected=bubbleBatchCasesV1262().filter(c=>bubbleBatchSelectedV1262.has(c.id));if(!selected.length&&draft?.id)selected=[draft];if(!selected.length){toast('請至少選擇一件案件');return;}button.disabled=true;
  try{$('bubble-frame')?.remove();const frame=document.createElement('iframe');frame.id='bubble-frame';frame.title='批次列印冒泡本';frame.style.cssText='position:fixed;left:-10000px;width:1px;height:1px;border:0';await new Promise((resolve,reject)=>{frame.onload=resolve;frame.onerror=reject;frame.srcdoc=bubbleBatchPrintHTMLV1262(selected);document.body.append(frame);});await frame.contentDocument.fonts.ready;frame.contentWindow.fitBubble?.();frame.contentWindow.focus();const title=document.title;try{document.title='';frame.contentWindow.print();}finally{document.title=title;}}
  catch(error){console.error(error);alert('無法批次列印冒泡本：'+error.message);}finally{button.disabled=false;}
 },true);
@@ -16303,10 +16303,10 @@ serviceConfirmActionsStyleV1409.textContent=`
 #service-confirm-dialog .sc-actions [data-sc-print]:not([data-sc-partial512]):hover{background:#bd2830!important}
 `;
 document.head.append(serviceConfirmActionsStyleV1409);
-document.querySelector('.app-version').textContent='V1409';
-document.querySelector('title').textContent='成交管理 V1409・彩虹版';
-Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1409・彩虹版'},set(){}});
-document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409');
+document.querySelector('.app-version').textContent='V1410';
+document.querySelector('title').textContent='成交管理 V1410・彩虹版';
+Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1410・彩虹版'},set(){}});
+document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410');
 </script>
 </body></html>
 
