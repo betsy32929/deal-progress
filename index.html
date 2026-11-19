@@ -16293,10 +16293,20 @@ cloudRefreshSessionV1401=async function(){return cloudSessionV1401()};
 cloudAuthFetchV1401=async function(path,options={}){const cfg=cloudConfigV1401();if(!cfg.url||!cfg.key)throw Error('請先設定 Supabase URL 和 Publishable Key');return fetch(cfg.url+path,{...options,headers:{apikey:cfg.key,'Content-Type':'application/json',...(options.headers||{})}})};
 supabaseDialogV1399.addEventListener('close',()=>{if(cloudSessionV1401())cloudInitialSyncV1401().catch(error=>cloudSetStatusV1401(error.message,'error'))});
 if(cloudSessionV1401())cloudInitialSyncV1401().catch(error=>cloudSetStatusV1401(error.message,'error'));else cloudSetStatusV1401('雲端：請設定 URL、KEY','');
-document.querySelector('.app-version').textContent='V1408';
-document.querySelector('title').textContent='成交管理 V1408・彩虹版';
-Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1408・彩虹版'},set(){}});
-document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408');
+const serviceConfirmActionsStyleV1409=document.createElement('style');
+serviceConfirmActionsStyleV1409.id='service-confirm-actions-v1409';
+serviceConfirmActionsStyleV1409.textContent=`
+#service-confirm-dialog .sc-actions{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:10px!important;overflow-x:auto;padding:10px 18px}
+#service-confirm-dialog .sc-actions>span{flex:1 1 auto;min-width:12px}
+#service-confirm-dialog .sc-actions>button{flex:0 0 auto;white-space:nowrap}
+#service-confirm-dialog .sc-actions [data-sc-print]:not([data-sc-partial512]){background:#d9363e!important;border-color:#c62c34!important;color:#fff!important;font-weight:800!important}
+#service-confirm-dialog .sc-actions [data-sc-print]:not([data-sc-partial512]):hover{background:#bd2830!important}
+`;
+document.head.append(serviceConfirmActionsStyleV1409);
+document.querySelector('.app-version').textContent='V1409';
+document.querySelector('title').textContent='成交管理 V1409・彩虹版';
+Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1409・彩虹版'},set(){}});
+document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409');
 </script>
 </body></html>
 
