@@ -16285,15 +16285,17 @@ const openSupabaseBeforeV1401=openSupabaseSettingsV1399;openSupabaseSettingsV139
 /* Key-only mode starts synchronization below; do not start the retired password session. */
 /* V1403: key-only cloud sync, no account password. */
 cloudLoginBoxV1401.remove();cloudResetDialogV1402.remove();cloudSaveSessionV1401(null);
+const cloudBuiltInConfigV1405={url:'https://oiywtmjbasoonfuxemtr.supabase.co',key:'sb_publishable_dhr81918k0zRtar14yepIA_ZWmTKT10'};
+localStorage.setItem(supabaseSettingsKeyV1399,JSON.stringify(cloudBuiltInConfigV1405));
 cloudSessionV1401=function(){const cfg=cloudConfigV1401();return cfg.url&&cfg.key?{key_only:true}:null};
 cloudRefreshSessionV1401=async function(){return cloudSessionV1401()};
 cloudAuthFetchV1401=async function(path,options={}){const cfg=cloudConfigV1401();if(!cfg.url||!cfg.key)throw Error('請先設定 Supabase URL 和 Publishable Key');return fetch(cfg.url+path,{...options,headers:{apikey:cfg.key,'Content-Type':'application/json',...(options.headers||{})}})};
 supabaseDialogV1399.addEventListener('close',()=>{if(cloudSessionV1401())cloudInitialSyncV1401().catch(error=>cloudSetStatusV1401(error.message,'error'))});
 if(cloudSessionV1401())cloudInitialSyncV1401().catch(error=>cloudSetStatusV1401(error.message,'error'));else cloudSetStatusV1401('雲端：請設定 URL、KEY','');
-document.querySelector('.app-version').textContent='V1404';
-document.querySelector('title').textContent='成交管理 V1404・彩虹版';
-Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1404・彩虹版'},set(){}});
-document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404');
+document.querySelector('.app-version').textContent='V1405';
+document.querySelector('title').textContent='成交管理 V1405・彩虹版';
+Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1405・彩虹版'},set(){}});
+document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405');
 </script>
 </body></html>
 
