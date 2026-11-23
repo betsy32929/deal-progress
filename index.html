@@ -16323,12 +16323,15 @@ const invoiceDirectoryStyleV1412=document.createElement('style');invoiceDirector
 function minorGuardianHTMLV1414(side,row,index){
  const zh=side==='seller'?'賣方':'買方',prefix=side==='seller'?'seller':'buyer',key=side==='seller'?sellerKey(row,'guardianScan'):buyerKey(row,'guardianScan');
  const input=(field,label,placeholder='')=>'<label class="guardian-field-v1414"><span>'+label+' <b>必填</b></span><input id="'+prefix+'-'+row.id+'-'+field+'" data-'+prefix+'-id="'+esc(row.id)+'" data-'+prefix+'-text="'+field+'" value="'+esc(row[field]||'')+'" placeholder="'+placeholder+'" aria-label="第'+(index+1)+'位'+zh+label+'" required></label>';
- return '<div class="minor-guardian-v1414"><label class="minor-toggle-v1414"><input type="checkbox" data-minor-side-v1414="'+side+'" data-minor-id-v1414="'+esc(row.id)+'" '+(row.minor?'checked':'')+'> 未成年</label>'+(row.minor?'<div class="guardian-fields-v1414"><strong>法定代理人</strong>'+input('guardianName','姓名')+input('guardianIdentity','身分證字號','英文字母＋9碼數字')+input('guardianRelation','關係','例如：父、母')+'<div class="guardian-scan-v1414">'+actionHTML({id:key,label:'法定代理人身分證掃描'})+'</div></div>':'')+'</div>';
+ return '<div class="minor-guardian-v1414"><span class="minor-detected-v1416">未成年</span><div class="guardian-fields-v1414"><strong>法定代理人</strong>'+input('guardianName','姓名')+input('guardianIdentity','身分證字號','英文字母＋9碼數字')+input('guardianRelation','關係','例如：父、母')+'<div class="guardian-scan-v1414">'+actionHTML({id:key,label:'法定代理人身分證掃描'})+'</div></div></div>';
 }
+function datePartsV1416(value){const match=String(value||'').trim().match(/^(\d{2,4})[\/.-](\d{1,2})[\/.-](\d{1,2})$/);if(!match)return null;let year=Number(match[1]),month=Number(match[2]),day=Number(match[3]);if(year<300)year+=1911;const date=new Date(year,month-1,day);return date.getFullYear()===year&&date.getMonth()===month-1&&date.getDate()===day?{year,month,day}:null;}
+function minorFromBirthV1416(value){const birth=datePartsV1416(value),deal=datePartsV1416(draft.dealDate);if(!birth||!deal)return false;let age=deal.year-birth.year;if(deal.month<birth.month||(deal.month===birth.month&&deal.day<birth.day))age--;return age>=0&&age<18;}
+function birthDateControlV1416(side,row,index){const prefix=side==='seller'?'seller':'buyer',zh=side==='seller'?'賣方':'買方';return '<label class="birth-date-v1416"><span>出生年月日</span><input id="'+prefix+'-'+row.id+'-birthDate" data-'+prefix+'-id="'+esc(row.id)+'" data-'+prefix+'-text="birthDate" value="'+esc(row.birthDate||'')+'" placeholder="例如 100/1/1" aria-label="第'+(index+1)+'位'+zh+'出生年月日"></label>';}
 function addMinorGuardianRowsV1414(html,side){
  const template=document.createElement('template');template.innerHTML=html;
  const rows=side==='seller'?(draft._sellerRows||[]):(draft._buyerRows||[]);
- template.content.querySelectorAll('.'+side+'-share-row').forEach((node,index)=>{const row=rows.find(item=>item.id===node.dataset[side+'Row']);if(!row)return;if(row.minor){node.insertAdjacentHTML('beforeend',minorGuardianHTMLV1414(side,row,index));return;}const firstEntry=node.querySelector('.'+side+'-entry-line');firstEntry?.insertAdjacentHTML('beforeend','<label class="minor-toggle-v1414"><input type="checkbox" data-minor-side-v1414="'+side+'" data-minor-id-v1414="'+esc(row.id)+'">未成年</label>');});
+ template.content.querySelectorAll('.'+side+'-share-row').forEach((node,index)=>{const row=rows.find(item=>item.id===node.dataset[side+'Row']);if(!row)return;row.minor=minorFromBirthV1416(row.birthDate);const identityEntry=node.querySelectorAll('.'+side+'-entry-line')[1];identityEntry?.insertAdjacentHTML('beforeend',birthDateControlV1416(side,row,index));if(row.minor)node.insertAdjacentHTML('beforeend',minorGuardianHTMLV1414(side,row,index));});
  return template.innerHTML;
 }
 const sellerRowsBeforeV1414=sellerRowsHTML;sellerRowsHTML=function(){return addMinorGuardianRowsV1414(sellerRowsBeforeV1414.apply(this,arguments),'seller')};
@@ -16341,7 +16344,7 @@ function validateMinorGuardiansV1414(showMessage=false){
  if(first&&showMessage){toast(label);first.scrollIntoView({block:'center'});first.focus();first.reportValidity();}
  return !first;
 }
-document.addEventListener('change',event=>{const box=event.target.closest('[data-minor-side-v1414]');if(!box)return;const side=box.dataset.minorSideV1414,rows=side==='seller'?draft._sellerRows:draft._buyerRows,row=rows?.find(item=>item.id===box.dataset.minorIdV1414);if(!row)return;row.minor=box.checked;const host=document.getElementById(side+'-share-rows');if(host)host.innerHTML=side==='seller'?sellerRowsHTML():buyerRowsHTML();if(side==='seller')syncSellerSummary();else syncBuyerSummary();dirty=true;scheduleAuto();showCheckOperators();if(box.checked)setTimeout(()=>document.getElementById(side+'-'+row.id+'-guardianName')?.focus(),0);});
+document.addEventListener('change',event=>{const el=event.target;if(el.dataset.sellerText!=='birthDate'&&el.dataset.buyerText!=='birthDate')return;const side=el.dataset.sellerText?'seller':'buyer',rows=side==='seller'?draft._sellerRows:draft._buyerRows,row=rows?.find(item=>item.id===(side==='seller'?el.dataset.sellerId:el.dataset.buyerId));if(!row)return;const before=!!row.minor;row.minor=minorFromBirthV1416(row.birthDate);el.classList.toggle('birth-date-invalid-v1416',!!String(row.birthDate||'').trim()&&!datePartsV1416(row.birthDate));const host=document.getElementById(side+'-share-rows');if(host&&before!==row.minor)host.innerHTML=side==='seller'?sellerRowsHTML():buyerRowsHTML();if(side==='seller')syncSellerSummary();else syncBuyerSummary();dirty=true;scheduleAuto();showCheckOperators();if(!before&&row.minor)setTimeout(()=>document.getElementById(side+'-'+row.id+'-guardianName')?.focus(),0);});
 $('form').addEventListener('input',event=>{if(!event.target.closest('.guardian-fields-v1414'))return;validateMinorGuardiansV1414();scheduleAuto();});
 const validateFormBeforeV1414=validateForm;validateForm=function(){return validateMinorGuardiansV1414(true)&&validateFormBeforeV1414.apply(this,arguments)};
 const minorGuardianStyleV1414=document.createElement('style');minorGuardianStyleV1414.textContent=`
@@ -16349,15 +16352,16 @@ const minorGuardianStyleV1414=document.createElement('style');minorGuardianStyle
 .minor-toggle-v1414{display:inline-flex;align-items:center;gap:4px;min-width:auto;font-size:12px;font-weight:500;color:#7b8798;white-space:nowrap}.minor-toggle-v1414 input{width:14px;height:14px;margin:0;accent-color:#7d8fa8}
 .minor-toggle-v1414:has(input:checked){font-weight:700;color:#7444a4}
 .seller-entry-line>.minor-toggle-v1414,.buyer-entry-line>.minor-toggle-v1414{flex:0 0 auto;margin-left:2px}
+.birth-date-v1416{display:grid;grid-template-columns:auto 92px;align-items:center;gap:4px;flex:0 0 auto;margin-left:4px;color:#718096;font-size:11px;white-space:nowrap}.birth-date-v1416 input{width:92px!important;min-width:92px!important;padding-left:7px!important;padding-right:7px!important;font-size:12px!important}.birth-date-invalid-v1416{border-color:#e34d68!important;background:#fff1f4!important}.minor-detected-v1416{flex:0 0 auto;font-size:12px;font-weight:700;color:#b3316b;white-space:nowrap}
 .guardian-fields-v1414{display:grid;grid-template-columns:auto minmax(150px,1fr) minmax(190px,1.15fr) minmax(140px,.85fr) minmax(210px,1.2fr);align-items:end;gap:10px;flex:1}.guardian-fields-v1414>strong{align-self:center;color:#7444a4;white-space:nowrap}
 .guardian-field-v1414{display:grid;gap:4px}.guardian-field-v1414 span{font-size:13px;color:#5d4774}.guardian-field-v1414 b{font-size:11px;color:#c9364b}.guardian-field-v1414 input{width:100%;min-width:0}.guardian-invalid-v1414{border-color:#e34d68!important;background:#fff1f4!important}.guardian-scan-v1414{align-self:end}
 @media(max-width:1150px){.guardian-fields-v1414{grid-template-columns:repeat(2,minmax(220px,1fr))}.guardian-fields-v1414>strong{grid-column:1/-1}}
 `;
 document.head.append(minorGuardianStyleV1414);
-document.querySelector('.app-version').textContent='V1415';
-document.querySelector('title').textContent='成交管理 V1415・彩虹版';
-Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1415・彩虹版'},set(){}});
-document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410','version-ready-v1411','version-ready-v1412','version-ready-v1413','version-ready-v1414','version-ready-v1415');
+document.querySelector('.app-version').textContent='V1416';
+document.querySelector('title').textContent='成交管理 V1416・彩虹版';
+Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1416・彩虹版'},set(){}});
+document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410','version-ready-v1411','version-ready-v1412','version-ready-v1413','version-ready-v1414','version-ready-v1415','version-ready-v1416');
 </script>
 </body></html>
 
