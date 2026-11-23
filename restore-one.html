@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>恢復鹽水農地單筆案件</title>
+<style>
+body{font-family:"Microsoft JhengHei",sans-serif;margin:24px;color:#16365c;background:#f4f8fd}.card{max-width:760px;padding:20px;background:#fff;border:1px solid #bfd2e8;border-radius:12px}button{padding:10px 18px;border:0;border-radius:9px;background:#2876c7;color:#fff;font-size:16px;cursor:pointer}button:disabled{opacity:.5}.ok{color:#087a55}.bad{color:#c62828}
+</style>
+<div class="card">
+  <h1>恢復鹽水農地單筆案件</h1>
+  <p>只補回「鹽水北竹子腳段優質農地」，不會匯入整份舊資料，也不會改動其他案件。</p>
+  <button id="restore">補回這一筆</button>
+  <p id="status"></p>
+</div>
+<script>
+const TARGET_ID='090ccaed-77fc-4ef8-900b-81bfb0e7757d';
+const SB_URL='https://oiywtmjbasoonfuxemtr.supabase.co';
+const SB_KEY='sb_publishable_dhr81918k0zRtar14yepIA_ZWmTKT10';
+const status=document.querySelector('#status'),button=document.querySelector('#restore');
+const casesOf=v=>Array.isArray(v?.cases)?v.cases:Array.isArray(v?.items)?v.items:[];
+function openDb(){return new Promise((resolve,reject)=>{const r=indexedDB.open('deal-manager-offline-v1',1);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);r.onupgradeneeded=()=>{r.transaction.abort();reject(new Error('找不到既有備份資料庫'))}})}
+function allEntries(db){return new Promise((resolve,reject)=>{const tx=db.transaction('data','readonly'),req=tx.objectStore('data').openCursor(),a=[];req.onsuccess=()=>{const c=req.result;if(!c)return resolve(a);a.push({key:String(c.key),value:c.value});c.continue()};req.onerror=()=>reject(req.error)})}
+async function findCase(){const db=await openDb(),entries=await allEntries(db);db.close();for(const entry of entries){const hit=casesOf(entry.value).find(c=>c?.id===TARGET_ID);if(hit)return hit}throw new Error('瀏覽器備份中找不到指定案件')}
+async function cloud(method,query='',body){const r=await fetch(SB_URL+'/rest/v1/deal_progress_state'+query,{method,headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:'return=representation'},body:body?JSON.stringify(body):undefined});if(!r.ok)throw new Error('雲端操作失敗 '+r.status);return r.json()}
+async function restore(){button.disabled=true;status.className='';status.textContent='正在核對並補回…';try{const recovered=await findCase(),rows=await cloud('GET','?id=eq.main&select=data,revision,updated_at'),row=rows[0];if(!row)throw new Error('雲端找不到主資料');const cases=casesOf(row.data);if(cases.some(c=>c?.id===TARGET_ID)){status.className='ok';status.textContent='✓ 這筆已經在雲端，沒有重複新增。';return}const revision=Math.max(Date.now(),Number(row.revision||0)+1),data={...row.data,cases:[...cases,recovered]};const saved=await cloud('PATCH','?id=eq.main&revision=eq.'+encodeURIComponent(row.revision),{data,revision,updated_at:new Date().toISOString()});if(!saved.length)throw new Error('雲端剛有其他更新，已停止，請重新按一次');status.className='ok';status.textContent='✓ 已補回：鹽水北竹子腳段優質農地（目前 '+data.cases.length+' 件）';button.textContent='已補回';}catch(e){status.className='bad';status.textContent='恢復失敗：'+e.message;button.disabled=false}}
+button.onclick=restore;
+</script>
+</html>
