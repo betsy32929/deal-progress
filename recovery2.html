@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>成交管理只讀救援檢查</title>
+<style>
+body{font-family:"Microsoft JhengHei",sans-serif;margin:24px;color:#16365c;background:#f4f8fd}h1{font-size:24px}.note{padding:12px 16px;background:#fff4d7;border:1px solid #e8c56a;border-radius:10px}.card{margin-top:14px;padding:14px;background:#fff;border:1px solid #bfd2e8;border-radius:10px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:8px;border:1px solid #d8e3ef;text-align:left;vertical-align:top}th{background:#eaf3ff}code{word-break:break-all}.ok{color:#087a55}.bad{color:#c62828}.small{font-size:13px;color:#58708d}button{padding:8px 14px;border:1px solid #7aa3cf;border-radius:8px;background:#fff;cursor:pointer}
+</style>
+<h1>成交管理只讀救援檢查</h1>
+<div class="note">本頁只讀取這台瀏覽器的本機備份，不會修改、匯入或上傳任何資料。</div>
+<div class="card"><label>指定案件關鍵字：<input id="q" value="鹽水北竹子腳段優質農地" style="width:360px;padding:7px"></label> <button id="scan">重新檢查</button><div id="status"></div></div>
+<div id="result"></div>
+<script>
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const keyTime=k=>{const m=String(k).match(/state-before-cloud-(\d+)/);return m?new Date(+m[1]):null};
+const fmt=d=>d?new Intl.DateTimeFormat('zh-TW',{dateStyle:'short',timeStyle:'medium',hour12:false}).format(d):'—';
+const casesOf=v=>Array.isArray(v?.cases)?v.cases:Array.isArray(v?.items)?v.items:[];
+const label=c=>c?.name||c?.caseName||c?.title||c?.fields?.name||c?.basic?.name||'未命名案件';
+const address=c=>c?.address||c?.fields?.address||c?.basic?.address||'';
+function openDb(){return new Promise((resolve,reject)=>{const r=indexedDB.open('deal-manager-offline-v1',1);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);r.onupgradeneeded=()=>{r.transaction.abort();reject(new Error('找不到既有備份資料庫'))}})}
+function allEntries(db){return new Promise((resolve,reject)=>{const tx=db.transaction('data','readonly'),req=tx.objectStore('data').openCursor(),a=[];req.onsuccess=()=>{const c=req.result;if(!c)return resolve(a);a.push({key:String(c.key),value:c.value});c.continue()};req.onerror=()=>reject(req.error)})}
+async function scan(){const status=document.querySelector('#status'),out=document.querySelector('#result'),q=document.querySelector('#q').value.trim();status.textContent='檢查中…';out.innerHTML='';try{const db=await openDb(),entries=await allEntries(db);db.close();const states=entries.filter(x=>x.key==='state'||x.key.startsWith('state-before-cloud-')).sort((a,b)=>(keyTime(b.key)?.getTime()||9e15)-(keyTime(a.key)?.getTime()||9e15));const rows=[];for(const x of states){const cs=casesOf(x.value);const hits=cs.filter(c=>JSON.stringify(c).includes(q));rows.push({key:x.key,time:keyTime(x.key),count:cs.length,hits,cases:cs})}
+const target=[...rows].reverse().find(r=>r.hits.length),targetMs=target?.time?.getTime()||0;const base=[...rows].reverse().filter(r=>r.time&&r.time.getTime()<targetMs&&!r.hits.length).pop();let compare='';if(target&&base){const bm=new Map(base.cases.map(c=>[c.id||c.contract||label(c),c])),tm=new Map(target.cases.map(c=>[c.id||c.contract||label(c),c]));const added=[...tm].filter(([k])=>!bm.has(k)).map(([,c])=>c),removed=[...bm].filter(([k])=>!tm.has(k)).map(([,c])=>c),changed=[...tm].filter(([k,c])=>bm.has(k)&&JSON.stringify(c)!==JSON.stringify(bm.get(k))).map(([,c])=>c);compare=`<div class="card"><h2>新增前後比對</h2><p>基準：${fmt(base.time)}（${base.count} 件） → 新資料：${fmt(target.time)}（${target.count} 件）</p><p><b>新增：</b>${added.length?added.map(c=>esc(label(c))).join('、'):'無'}</p><p><b>刪除：</b>${removed.length?removed.map(c=>esc(label(c))).join('、'):'無'}</p><p><b>既有案件內容有差異：</b>${changed.length?changed.map(c=>`${esc(label(c))} <span class="small">（更新 ${esc(c.updatedAt||'未記錄')}）</span>`).join('<br>'):'無'}</p></div>`}
+status.innerHTML=`<p class="ok">找到 ${states.length} 份狀態資料；本頁未修改任何內容。</p>`;out.innerHTML=compare+rows.map(r=>`<div class="card"><b>${esc(r.key==='state'?'目前本機狀態':fmt(r.time))}</b>　案件數：${r.count}　<span class="${r.hits.length?'ok':'small'}">符合指定案件：${r.hits.length}</span>${r.hits.map(c=>`<table><tr><th>案名</th><td>${esc(label(c))}</td></tr><tr><th>地址</th><td>${esc(address(c))}</td></tr><tr><th>完整案件資料</th><td><details><summary>展開檢查</summary><pre>${esc(JSON.stringify(c,null,2))}</pre></details></td></tr></table>`).join('')}</div>`).join('')||'<div class="card bad">沒有可讀取的狀態備份。</div>'}catch(e){status.innerHTML=`<p class="bad">讀取失敗：${esc(e.message)}</p>`}}
+document.querySelector('#scan').onclick=scan;scan();
+</script>
+</html>
