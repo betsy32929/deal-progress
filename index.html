@@ -16328,7 +16328,7 @@ function minorGuardianHTMLV1414(side,row,index){
 function addMinorGuardianRowsV1414(html,side){
  const template=document.createElement('template');template.innerHTML=html;
  const rows=side==='seller'?(draft._sellerRows||[]):(draft._buyerRows||[]);
- template.content.querySelectorAll('.'+side+'-share-row').forEach((node,index)=>{const row=rows.find(item=>item.id===node.dataset[side+'Row']);if(row)node.insertAdjacentHTML('beforeend',minorGuardianHTMLV1414(side,row,index));});
+ template.content.querySelectorAll('.'+side+'-share-row').forEach((node,index)=>{const row=rows.find(item=>item.id===node.dataset[side+'Row']);if(!row)return;if(row.minor){node.insertAdjacentHTML('beforeend',minorGuardianHTMLV1414(side,row,index));return;}const firstEntry=node.querySelector('.'+side+'-entry-line');firstEntry?.insertAdjacentHTML('beforeend','<label class="minor-toggle-v1414"><input type="checkbox" data-minor-side-v1414="'+side+'" data-minor-id-v1414="'+esc(row.id)+'">未成年</label>');});
  return template.innerHTML;
 }
 const sellerRowsBeforeV1414=sellerRowsHTML;sellerRowsHTML=function(){return addMinorGuardianRowsV1414(sellerRowsBeforeV1414.apply(this,arguments),'seller')};
@@ -16345,17 +16345,19 @@ document.addEventListener('change',event=>{const box=event.target.closest('[data
 $('form').addEventListener('input',event=>{if(!event.target.closest('.guardian-fields-v1414'))return;validateMinorGuardiansV1414();scheduleAuto();});
 const validateFormBeforeV1414=validateForm;validateForm=function(){return validateMinorGuardiansV1414(true)&&validateFormBeforeV1414.apply(this,arguments)};
 const minorGuardianStyleV1414=document.createElement('style');minorGuardianStyleV1414.textContent=`
-.seller-share-row .minor-guardian-v1414,.buyer-share-row .minor-guardian-v1414{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:9px 12px;border-top:1px solid #d9c9ef;background:#faf6ff}
-.minor-toggle-v1414{display:inline-flex;align-items:center;gap:6px;min-width:90px;font-weight:800;color:#7444a4;white-space:nowrap}.minor-toggle-v1414 input{width:20px;height:20px;accent-color:#8c52bd}
+.seller-share-row .minor-guardian-v1414,.buyer-share-row .minor-guardian-v1414{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:3px 10px 5px;border-top:0;background:transparent}
+.minor-toggle-v1414{display:inline-flex;align-items:center;gap:4px;min-width:auto;font-size:12px;font-weight:500;color:#7b8798;white-space:nowrap}.minor-toggle-v1414 input{width:14px;height:14px;margin:0;accent-color:#7d8fa8}
+.minor-toggle-v1414:has(input:checked){font-weight:700;color:#7444a4}
+.seller-entry-line>.minor-toggle-v1414,.buyer-entry-line>.minor-toggle-v1414{flex:0 0 auto;margin-left:2px}
 .guardian-fields-v1414{display:grid;grid-template-columns:auto minmax(150px,1fr) minmax(190px,1.15fr) minmax(140px,.85fr) minmax(210px,1.2fr);align-items:end;gap:10px;flex:1}.guardian-fields-v1414>strong{align-self:center;color:#7444a4;white-space:nowrap}
 .guardian-field-v1414{display:grid;gap:4px}.guardian-field-v1414 span{font-size:13px;color:#5d4774}.guardian-field-v1414 b{font-size:11px;color:#c9364b}.guardian-field-v1414 input{width:100%;min-width:0}.guardian-invalid-v1414{border-color:#e34d68!important;background:#fff1f4!important}.guardian-scan-v1414{align-self:end}
 @media(max-width:1150px){.guardian-fields-v1414{grid-template-columns:repeat(2,minmax(220px,1fr))}.guardian-fields-v1414>strong{grid-column:1/-1}}
 `;
 document.head.append(minorGuardianStyleV1414);
-document.querySelector('.app-version').textContent='V1414';
-document.querySelector('title').textContent='成交管理 V1414・彩虹版';
-Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1414・彩虹版'},set(){}});
-document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410','version-ready-v1411','version-ready-v1412','version-ready-v1413','version-ready-v1414');
+document.querySelector('.app-version').textContent='V1415';
+document.querySelector('title').textContent='成交管理 V1415・彩虹版';
+Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1415・彩虹版'},set(){}});
+document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410','version-ready-v1411','version-ready-v1412','version-ready-v1413','version-ready-v1414','version-ready-v1415');
 </script>
 </body></html>
 
