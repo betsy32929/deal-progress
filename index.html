@@ -2360,7 +2360,8 @@ function actualRows(c,side){
  return names.map((name,i)=>{const old=saved.find(r=>r.name===name);return {name,pct:same?old.pct:equal[i],split:old?.split??'',external:taiPersonnelOutside564(name,c)};});
 }
 function recordOnly1072(c){return c._deductionUsage1072?c._deductionUsage1072==='record':/溢開|多開/.test(c._deductionLabel1062||'');}
-function recordAmount1072(c){const a=actualConfig(c),base=a.middleMode==='pricePct'?num(c.price):a.middleMode==='sellerPct'?num(actualFee1005(c,'seller')):num(actualFee1005(c,'seller'))+num(actualFee1005(c,'buyer'));return a.middleMode==='amount'?Math.round(num(a.middleValue)):Math.round(base*num(a.middleValue)/100);}
+function effectiveFee1072(c,side){return typeof actualFee1005==='function'?actualFee1005(c,side):Object.prototype.hasOwnProperty.call(c._actualFees1005||{},side)?c._actualFees1005[side]:c[side+'Fee'];}
+function recordAmount1072(c){const a=actualConfig(c),base=a.middleMode==='pricePct'?num(c.price):a.middleMode==='sellerPct'?num(effectiveFee1072(c,'seller')):num(effectiveFee1072(c,'seller'))+num(effectiveFee1072(c,'buyer'));return a.middleMode==='amount'?Math.round(num(a.middleValue)):Math.round(base*num(a.middleValue)/100);}
 function actualConfig(c){
  c._actualCalc??={version:1,kind:'',contract:'',middleMode:c.brokerMode==='百分比（總佣金）'?'grossPct':'amount',middleValue:c.broker??'',middleTaxRate:'',invoices:{seller:{amount:'',rate:'',mode:'company',shares:{}},buyer:{amount:'',rate:'',mode:'company',shares:{}}}};
  const a=c._actualCalc;a.dev=actualRows(c,'dev');a.sale=actualRows(c,'sale');return a;
@@ -16358,10 +16359,10 @@ const minorGuardianStyleV1414=document.createElement('style');minorGuardianStyle
 @media(max-width:1150px){.guardian-fields-v1414{grid-template-columns:repeat(2,minmax(220px,1fr))}.guardian-fields-v1414>strong{grid-column:1/-1}}
 `;
 document.head.append(minorGuardianStyleV1414);
-document.querySelector('.app-version').textContent='V1416';
-document.querySelector('title').textContent='成交管理 V1416・彩虹版';
-Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1416・彩虹版'},set(){}});
-document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410','version-ready-v1411','version-ready-v1412','version-ready-v1413','version-ready-v1414','version-ready-v1415','version-ready-v1416');
+document.querySelector('.app-version').textContent='V1417';
+document.querySelector('title').textContent='成交管理 V1417・彩虹版';
+Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1417・彩虹版'},set(){}});
+document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410','version-ready-v1411','version-ready-v1412','version-ready-v1413','version-ready-v1414','version-ready-v1415','version-ready-v1416','version-ready-v1417');
 </script>
 </body></html>
 
