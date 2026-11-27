@@ -16381,10 +16381,25 @@ excelItemsFromPrintHTMLV965=async function(html,options){
  }
  return items;
 };
-document.querySelector('.app-version').textContent='V1418';
-document.querySelector('title').textContent='成交管理 V1418・彩虹版';
-Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1418・彩虹版'},set(){}});
-document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410','version-ready-v1411','version-ready-v1412','version-ready-v1413','version-ready-v1414','version-ready-v1415','version-ready-v1416','version-ready-v1417','version-ready-v1418');
+/* V1419: Invoice-row date is the only print-date source; restore the line before uppercase amount. */
+const invoiceValuesBeforeV1419=invoiceValues773;
+invoiceValues773=function(){
+ const values=invoiceValuesBeforeV1419.apply(this,arguments),row=invoiceContext773();let date='';try{date=row.date?parseDate(row.date):'';}catch{}
+ const parts=date.split('-');values.year=parts[0]?String(Number(parts[0])-1911):'';values.month=parts[1]?String(Number(parts[1])):'';values.day=parts[2]?String(Number(parts[2])):'';return values;
+};
+const excelItemsBeforeV1419=excelItemsFromPrintHTMLV965;
+excelItemsFromPrintHTMLV965=async function(html,options){
+ const items=await excelItemsBeforeV1419.apply(this,arguments);if(options?.sheetName==='發票套印')items.push({field:'uppercaseLeadingLineV1419',text:'',left:21.59,top:88.27,width:39.58,height:0,line:true});return items;
+};
+const excelShapeBeforeV1419=excelShapeV965;
+excelShapeV965=function(item,index){
+ if(!item.line)return excelShapeBeforeV1419.apply(this,arguments);
+ const emu=mm=>Math.max(0,Math.round(mm*36000));return '<xdr:absoluteAnchor><xdr:pos x="'+emu(item.left)+'" y="'+emu(item.top)+'"/><xdr:ext cx="'+emu(item.width)+'" cy="0"/><xdr:cxnSp><xdr:nvCxnSpPr><xdr:cNvPr id="'+(index+2)+'" name="Invoice amount leading line"/><xdr:cNvCxnSpPr/></xdr:nvCxnSpPr><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="'+emu(item.width)+'" cy="0"/></a:xfrm><a:prstGeom prst="line"><a:avLst/></a:prstGeom><a:ln w="12700"><a:solidFill><a:srgbClr val="000000"/></a:solidFill></a:ln></xdr:spPr></xdr:cxnSp><xdr:clientData/></xdr:absoluteAnchor>';
+};
+document.querySelector('.app-version').textContent='V1419';
+document.querySelector('title').textContent='成交管理 V1419・彩虹版';
+Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1419・彩虹版'},set(){}});
+document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410','version-ready-v1411','version-ready-v1412','version-ready-v1413','version-ready-v1414','version-ready-v1415','version-ready-v1416','version-ready-v1417','version-ready-v1418','version-ready-v1419');
 </script>
 </body></html>
 
