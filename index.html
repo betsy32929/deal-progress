@@ -1505,7 +1505,7 @@ save=async function(close=true){try{await sharedOptionsPending}catch{return fals
 
 for(const id of ['add','backup','import','exportExcel'])$(id).disabled=true;
 (async()=>{try{db=await new Promise((resolve,reject)=>{let r=indexedDB.open('deal-manager-offline-v1',1);r.onupgradeneeded=()=>r.result.createObjectStore('data');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});let saved=await new Promise((resolve,reject)=>{let r=db.transaction('data').objectStore('data').get('state');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});if(saved)state=validBackup(saved);else state.options=optionDefaults(state);const storedSharedOptions=await new Promise((resolve,reject)=>{const r=db.transaction('data').objectStore('data').get('sharedOptions');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});if(storedSharedOptions){state.options=optionDefaults({...state,options:storedSharedOptions});state.notaries=[...state.options.notary];}await recoverAuto();await importPreparedV345();await completeImportedDelisting367();await initializeBackupStatus474();$('saveStatus').textContent='本機資料已就緒';
-for(const id of ['add','backup','import','exportExcel'])$(id).disabled=false;render();setInterval(()=>{remind();if(overdue().length&&!$('modal').open)toast(`仍有 ${overdue().length} 件尚未房管下架`)},60000)}catch(err){if(String(err?.message||err).replace(/\s+/g,'').includes('案件編輯錯誤')){console.warn('已略過失效的本機案件編輯暫存，繼續讀取雲端資料');$('saveStatus').textContent='本機暫存已略過，讀取雲端資料中';for(const id of ['add','backup','import','exportExcel'])$(id).disabled=false;try{render();}catch{}return;}$('saveStatus').textContent='無法開啟本機儲存';alert('無法讀取本機資料。請勿清除瀏覽器資料，保留備份後回報錯誤：'+err.message)}})();
+for(const id of ['add','backup','import','exportExcel'])$(id).disabled=false;render();setInterval(()=>{remind();if(overdue().length&&!$('modal').open)toast(`仍有 ${overdue().length} 件尚未房管下架`)},60000)}catch(err){console.error('本機初始化未完成，繼續讀取雲端資料',err);$('saveStatus').textContent='本機暫存未載入，改讀取雲端資料';$('saveStatus').title=String(err?.message||err);for(const id of ['add','backup','import','exportExcel'])$(id).disabled=false;try{render();}catch{}}})();
 
 
 document.addEventListener('click',e=>{const b=e.target.closest('[data-color-toggle]');if(!b)return;const key=b.dataset.colorToggle;const next=!(draft[key]||[false,false,false]).every(Boolean);draft[key]=[next,next,next];document.querySelectorAll('[data-triple]').forEach(el=>{if(el.dataset.triple===key)el.checked=next});updateNegTime(key)});
@@ -16444,9 +16444,9 @@ syncExternalInvoice746=function(){
  }}catch(error){console.error('我方開票欄位解除鎖定失敗',error);}
  return result;
 };
-document.querySelector('.app-version').textContent='V1431';
-document.querySelector('title').textContent='成交管理 V1431・彩虹版';
-Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1431・彩虹版'},set(){}});
+document.querySelector('.app-version').textContent='V1432';
+document.querySelector('title').textContent='成交管理 V1432・彩虹版';
+Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1432・彩虹版'},set(){}});
 document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410','version-ready-v1411','version-ready-v1412','version-ready-v1413','version-ready-v1414','version-ready-v1415','version-ready-v1416','version-ready-v1417','version-ready-v1418','version-ready-v1419','version-ready-v1420','version-ready-v1421','version-ready-v1422','version-ready-v1423','version-ready-v1424','version-ready-v1425','version-ready-v1426','version-ready-v1427','version-ready-v1428','version-ready-v1429','version-ready-v1430');
 </script>
 </body></html>
