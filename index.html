@@ -10969,7 +10969,7 @@ document.addEventListener('click',async event=>{
  const button=event.target.closest('button');if(!button)return;
  try{
   if(button.hasAttribute('data-ip-print')){
-   event.preventDefault();event.stopImmediatePropagation();button.disabled=true;const v=invoiceValues773(),setup=invoiceSetup773(v.type),errors=invoicePrintValidation773(v);if(errors.length)throw Error(errors.join('；'));await flushAuto();await downloadExcelPrintV965(invoicePrintHTML773(v,setup),{pageSelector:'.page',contentSelector:'.ink',pageWidth:Number(setup.width),pageHeight:Number(setup.height),paperSize:256,sheetName:'發票套印'},'發票套印-'+(v.serial||draft.name||''));toast('已下載 Excel 發票套印檔');return;
+   event.preventDefault();event.stopImmediatePropagation();button.disabled=true;const v=invoiceValues773(),setup=invoiceSetup773(v.type),errors=invoicePrintValidation773(v);if(errors.length)throw Error(errors.join('；'));await flushAuto();await downloadExcelPrintV965(invoicePrintHTML773(v,setup),{pageSelector:'.page',contentSelector:'.ink',pageWidth:Number(setup.width),pageHeight:Number(setup.height),paperSize:256,sheetName:'發票套印',invoiceType:v.type},'發票套印-'+(v.serial||draft.name||''));toast('已下載 Excel 發票套印檔');return;
   }
   if(button.hasAttribute('data-voucher-print')){
    event.preventDefault();event.stopImmediatePropagation();const v=voucherValues();if(!voucherValid(v))throw Error('金額與合計請填七位數內的非負整數');button.disabled=true;await flushAuto();await downloadExcelPrintV965(voucherExcelPrintHTMLV969(voucherEditing,v),{pageSelector:'.vp-page',contentSelector:'.vp-value,.vp-case-date850',pageWidth:210,pageHeight:297,paperSize:9,sheetName:'傳票套印'},(voucherTitles[voucherEditing]||'傳票')+'-'+(draft.name||''));toast('已下載 Excel 傳票套印檔');return;
@@ -11338,7 +11338,7 @@ downloadExcelPrintV965=function(html,options,filename){
 <script>// V1018: Match invoice Excel text boxes to the user's verified A4 portrait workbook.
 const excelItemsFromPrintHTMLBefore1018=excelItemsFromPrintHTMLV965;
 excelItemsFromPrintHTMLV965=async function(html,options){
- const items=await excelItemsFromPrintHTMLBefore1018.apply(this,arguments);if(options?.sheetName!=='發票套印')return items;
+ const items=await excelItemsFromPrintHTMLBefore1018.apply(this,arguments);if(options?.sheetName!=='發票套印'||String(options?.invoiceType||'2')!=='2')return items;
  const fixed={
   buyer:[21.66,14.38,98.66,4.48],month:[100.16,10.76,4.81,3.96],day:[109.18,10.76,5.05,3.96],
   city:[21.30,20.88,12.99,3.43],district:[41.76,20.88,15.64,3.43],item:[1.57,34.72,39.95,4.06],
@@ -16362,7 +16362,7 @@ document.head.append(minorGuardianStyleV1414);
 /* V1418: Match downloaded invoice Excel text boxes to the user's verified GE44362450 workbook. */
 const excelItemsBeforeV1418=excelItemsFromPrintHTMLV965;
 excelItemsFromPrintHTMLV965=async function(html,options){
- const items=await excelItemsBeforeV1418.apply(this,arguments);if(options?.sheetName!=='發票套印')return items;
+ const items=await excelItemsBeforeV1418.apply(this,arguments);if(options?.sheetName!=='發票套印'||String(options?.invoiceType||'2')!=='2')return items;
  const fixed={
   buyer:[28.86,9.30,98.66,4.48],month:[108.42,14.78,4.81,3.96],day:[118.92,14.78,5.05,3.96],
   item:[21.17,32.81,20.53,4.49],lineAmount:[80.59,33.24,30.20,4.06],
@@ -16389,7 +16389,7 @@ invoiceValues773=function(){
 };
 const excelItemsBeforeV1419=excelItemsFromPrintHTMLV965;
 excelItemsFromPrintHTMLV965=async function(html,options){
- const items=await excelItemsBeforeV1419.apply(this,arguments);if(options?.sheetName==='發票套印')items.push({field:'uppercaseLeadingLineV1419',text:'',left:29.88,top:88.27,width:34.88,height:0,line:true});return items;
+ const items=await excelItemsBeforeV1419.apply(this,arguments);if(options?.sheetName==='發票套印'&&String(options?.invoiceType||'2')==='2')items.push({field:'uppercaseLeadingLineV1419',text:'',left:29.88,top:88.27,width:34.88,height:0,line:true});return items;
 };
 const excelShapeBeforeV1419=excelShapeV965;
 excelShapeV965=function(item,index){
@@ -16403,10 +16403,10 @@ document.addEventListener('click',event=>{
  try{openInvoicePrint773(button.dataset.invoicePrintSide773,button.dataset.invoicePrint773);}
  catch(error){console.error(error);alert('發票列印視窗開啟失敗：'+(error.message||error));}
 },true);
-document.querySelector('.app-version').textContent='V1423';
-document.querySelector('title').textContent='成交管理 V1423・彩虹版';
-Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1423・彩虹版'},set(){}});
-document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410','version-ready-v1411','version-ready-v1412','version-ready-v1413','version-ready-v1414','version-ready-v1415','version-ready-v1416','version-ready-v1417','version-ready-v1418','version-ready-v1419','version-ready-v1420','version-ready-v1421','version-ready-v1422','version-ready-v1423');
+document.querySelector('.app-version').textContent='V1424';
+document.querySelector('title').textContent='成交管理 V1424・彩虹版';
+Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1424・彩虹版'},set(){}});
+document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410','version-ready-v1411','version-ready-v1412','version-ready-v1413','version-ready-v1414','version-ready-v1415','version-ready-v1416','version-ready-v1417','version-ready-v1418','version-ready-v1419','version-ready-v1420','version-ready-v1421','version-ready-v1422','version-ready-v1423','version-ready-v1424');
 </script>
 </body></html>
 
