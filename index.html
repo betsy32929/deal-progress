@@ -16403,10 +16403,34 @@ document.addEventListener('click',event=>{
  try{openInvoicePrint773(button.dataset.invoicePrintSide773,button.dataset.invoicePrint773);}
  catch(error){console.error(error);alert('發票列印視窗開啟失敗：'+(error.message||error));}
 },true);
-document.querySelector('.app-version').textContent='V1425';
-document.querySelector('title').textContent='成交管理 V1425・彩虹版';
-Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1425・彩虹版'},set(){}});
-document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410','version-ready-v1411','version-ready-v1412','version-ready-v1413','version-ready-v1414','version-ready-v1415','version-ready-v1416','version-ready-v1417','version-ready-v1418','version-ready-v1419','version-ready-v1420','version-ready-v1421','version-ready-v1422','version-ready-v1423','version-ready-v1424','version-ready-v1425');
+/* V1426: Adding a blank invoice must never rebuild or remove issued invoice rows. */
+document.addEventListener('click',event=>{
+ const button=event.target.closest?.('[data-invoice-add]');if(!button)return;
+ event.preventDefault();event.stopImmediatePropagation();
+ const side=button.dataset.invoiceAdd,rows=invoiceRows(draft,side);
+ rows.push({id:crypto.randomUUID(),number:'',date:'',amount:'',rate:'',mode:'company',shares:{},manualInvoice1000:true});
+ const body=$('invoice-rows-'+side);if(body)body.innerHTML=invoiceTableRows(side);
+ dirty=true;scheduleAuto();scheduleNavStatusV187();
+},true);
+/* V1426: Open the print document synchronously so the browser accepts the Print click. */
+printInvoice773=function(){
+ const dialog=$('invoice-print-dialog773'),button=dialog?.querySelector('[data-ip-print]');
+ if(!button)return;
+ const popup=window.open('','_blank','popup=yes,width=1100,height=800');
+ if(!popup){const error=$('ip-error773');if(error)error.textContent='瀏覽器阻擋列印視窗，請允許此網站開啟彈出式視窗後再按一次「印」。';return;}
+ try{
+  button.disabled=true;
+  const v=invoiceValues773(),html=invoicePrintHTML773(v);
+  popup.document.open();popup.document.write(html);popup.document.close();
+  const run=async()=>{try{await popup.document.fonts?.ready;popup.focus();popup.print();}catch(error){const out=$('ip-error773');if(out)out.textContent=error.message||'列印未完成，請重試';}finally{button.disabled=false;}};
+  if(popup.document.readyState==='complete')setTimeout(run,50);else popup.addEventListener('load',()=>setTimeout(run,50),{once:true});
+  flushAuto().catch(error=>{const out=$('ip-error773');if(out)out.textContent='資料儲存失敗：'+(error.message||error);});
+ }catch(error){button.disabled=false;popup.close();const out=$('ip-error773');if(out)out.textContent=error.message||'列印未完成，請重試';}
+};
+document.querySelector('.app-version').textContent='V1426';
+document.querySelector('title').textContent='成交管理 V1426・彩虹版';
+Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1426・彩虹版'},set(){}});
+document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410','version-ready-v1411','version-ready-v1412','version-ready-v1413','version-ready-v1414','version-ready-v1415','version-ready-v1416','version-ready-v1417','version-ready-v1418','version-ready-v1419','version-ready-v1420','version-ready-v1421','version-ready-v1422','version-ready-v1423','version-ready-v1424','version-ready-v1425','version-ready-v1426');
 </script>
 </body></html>
 
