@@ -16427,10 +16427,27 @@ printInvoice773=function(){
   flushAuto().catch(error=>{const out=$('ip-error773');if(out)out.textContent='資料儲存失敗：'+(error.message||error);});
  }catch(error){button.disabled=false;popup.close();const out=$('ip-error773');if(out)out.textContent=error.message||'列印未完成，請重試';}
 };
-document.querySelector('.app-version').textContent='V1426';
-document.querySelector('title').textContent='成交管理 V1426・彩虹版';
-Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1426・彩虹版'},set(){}});
-document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410','version-ready-v1411','version-ready-v1412','version-ready-v1413','version-ready-v1414','version-ready-v1415','version-ready-v1416','version-ready-v1417','version-ready-v1418','version-ready-v1419','version-ready-v1420','version-ready-v1421','version-ready-v1422','version-ready-v1423','version-ready-v1424','version-ready-v1425','version-ready-v1426');
+/* V1427: A partner-claim row means our company issues the invoice, even for an outside sales store. */
+const invoiceRecipientStateBeforeV1427=invoiceRecipientStateV199;
+invoiceRecipientStateV199=function(c,side,row){
+ if(partnerInvoice546(row)){delete row.externalIssued746;return recipientStateBefore746.call(this,c,side,row);}
+ return invoiceRecipientStateBeforeV1427.apply(this,arguments);
+};
+const syncExternalInvoiceBeforeV1427=syncExternalInvoice746;
+syncExternalInvoice746=function(){
+ const result=syncExternalInvoiceBeforeV1427.apply(this,arguments);
+ for(const side of ['seller','buyer'])for(const row of invoiceRows(draft,side)){
+  if(!partnerInvoice546(row))continue;
+  delete row.externalIssued746;
+  const marker=document.querySelector('#invoice-rows-'+side+' [data-invoice-id="'+CSS.escape(String(row.id))+'"]'),tr=marker?.closest('tr');
+  for(const el of tr?.querySelectorAll('input,select,textarea,button')||[]){delete el.dataset.externalDisabled746;el.disabled=false;}
+ }
+ return result;
+};
+document.querySelector('.app-version').textContent='V1427';
+document.querySelector('title').textContent='成交管理 V1427・彩虹版';
+Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1427・彩虹版'},set(){}});
+document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410','version-ready-v1411','version-ready-v1412','version-ready-v1413','version-ready-v1414','version-ready-v1415','version-ready-v1416','version-ready-v1417','version-ready-v1418','version-ready-v1419','version-ready-v1420','version-ready-v1421','version-ready-v1422','version-ready-v1423','version-ready-v1424','version-ready-v1425','version-ready-v1426','version-ready-v1427');
 </script>
 </body></html>
 
