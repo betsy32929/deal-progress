@@ -5996,12 +5996,25 @@ const beforeDeleteCheckpointV275=checkpointAuto;checkpointAuto=function(){return
 const beforeDeleteScheduleV275=scheduleAuto;scheduleAuto=function(){if(!deletingCaseV275)return beforeDeleteScheduleV275.apply(this,arguments);};
 const beforeDeleteFlushV275=flushAuto;flushAuto=function(){return deletingCaseV275?autoQueue:beforeDeleteFlushV275.apply(this,arguments);};
 const deleteCaseButtonV275=document.createElement('button');deleteCaseButtonV275.id='deleteCase';deleteCaseButtonV275.type='button';deleteCaseButtonV275.textContent='刪除案件';deleteCaseButtonV275.className='danger';$('archiveCase').before(deleteCaseButtonV275);
-deleteCaseButtonV275.onclick=async function(){
- if(deletingCaseV275)return;if(saving){toast('正在儲存，請稍候再刪除案件');return;}
- const id=draft.id;if(!id)return;const label=draft.name||'未命名案件';
- if(!confirm('確定永久刪除「'+label+'」？全部填寫內容、勾選紀錄、發票、業績與拆帳資料將一併刪除，無法復原。'))return;
- if(!confirm('再次確認：真的要永久刪除「'+label+'」嗎？刪除後完全無法復原。'))return;
- const priorDirty=dirty;let committed=false;deletingCaseV275=true;saving=true;this.disabled=true;clearTimeout(autoTimer);
+const deleteCaseDialogV1437=document.createElement('dialog');
+deleteCaseDialogV1437.id='delete-case-dialog-v1437';
+deleteCaseDialogV1437.innerHTML='<div style="min-width:min(520px,calc(100vw - 48px));padding:6px"><h3 style="margin:0 0 12px;color:#b42335">永久刪除案件</h3><p id="delete-case-message-v1437" style="line-height:1.7;margin:0 0 10px"></p><p style="color:#b42335;font-weight:700;margin:0 0 18px">案件全部填寫內容、勾選紀錄、發票、業績與拆帳資料都會一併刪除，且無法復原。</p><div style="display:flex;justify-content:flex-end;gap:10px"><button type="button" id="delete-case-cancel-v1437">取消</button><button type="button" id="delete-case-confirm-v1437" class="danger" style="background:#c9364e;color:#fff;border-color:#c9364e">永久刪除</button></div></div>';
+document.body.append(deleteCaseDialogV1437);
+$('delete-case-cancel-v1437').onclick=()=>deleteCaseDialogV1437.close();
+deleteCaseDialogV1437.addEventListener('click',e=>{if(e.target===deleteCaseDialogV1437)deleteCaseDialogV1437.close();});
+deleteCaseButtonV275.onclick=function(){
+ if(deletingCaseV275)return;
+ const id=draft.id;if(!id){toast('找不到此案件資料，請重新整理後再試');return;}
+ $('delete-case-message-v1437').textContent='確定要永久刪除「'+(draft.name||'未命名案件')+'」嗎？';
+ deleteCaseDialogV1437.showModal();
+};
+$('delete-case-confirm-v1437').onclick=async function(){
+ if(deletingCaseV275)return;
+ const id=draft.id;if(!id)return;
+ const priorDirty=dirty;let committed=false;deleteCaseDialogV1437.close();
+ deleteCaseButtonV275.disabled=true;this.disabled=true;
+ if(saving){toast('正在完成自動儲存，完成後繼續刪除');await autoQueue.catch(()=>{});}
+ deletingCaseV275=true;saving=true;clearTimeout(autoTimer);
  try{
   await autoQueue.catch(()=>{});
   const next=structuredClone(state),removed=next.cases.filter(c=>c.id===id);
@@ -6014,7 +6027,7 @@ deleteCaseButtonV275.onclick=async function(){
   $('modal').close();draft={};$('form').replaceChildren();$('nav').replaceChildren();$('f-footerNote').value='';$('editorTitle').textContent='';
   render();toast('案件及全部相關資料已永久刪除');
  }catch(error){if(committed){dirty=false;toast('案件已刪除，請重新整理更新畫面');}else{dirty=priorDirty;alert('刪除失敗，案件仍保留，請重試。');}}
- finally{deletingCaseV275=false;saving=false;this.disabled=false;if(!committed&&dirty&&$('modal').open)scheduleAuto();}
+ finally{deletingCaseV275=false;saving=false;this.disabled=false;deleteCaseButtonV275.disabled=false;if(!committed&&dirty&&$('modal').open)scheduleAuto();}
 };
 const handoffSeedsV276={urgent:[['建立案件與基本資料',0],['補齊進案資料',0],['取得業務成交回報',0],['確認是否需製作 M 夾並補齊資料',3],['確認價金與雙方服務費',2],['確認代書、簽約時間與地點',0],['補齊買賣方簽約資料',4],['準備及列印簽約文件',14],['記錄簽約起訖時間',0],['簽約後掃描歸檔',9]],signing:[['確認簽約文件與代書收件',1],['核對買賣方身分證及代理授權',4],['記錄簽約起訖時間',0],['確認斡旋金轉簽約金及單據',3],['補印簽約所需文件',14],['簽約後掃描歸檔',9],['回報簽約結果與待補事項',11]]};
 let handoffEditV276=null,handoffMineV276=false;
@@ -16444,9 +16457,9 @@ syncExternalInvoice746=function(){
  }}catch(error){console.error('我方開票欄位解除鎖定失敗',error);}
  return result;
 };
-document.querySelector('.app-version').textContent='V1436';
-document.querySelector('title').textContent='成交管理 V1436・彩虹版';
-Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1436・彩虹版'},set(){}});
+document.querySelector('.app-version').textContent='V1437';
+document.querySelector('title').textContent='成交管理 V1437・彩虹版';
+Object.defineProperty(document,'title',{configurable:true,get(){return '成交管理 V1437・彩虹版'},set(){}});
 document.documentElement.classList.add('version-ready-v1397','version-ready-v1398','version-ready-v1399','version-ready-v1400','version-ready-v1401','version-ready-v1402','version-ready-v1403','version-ready-v1404','version-ready-v1405','version-ready-v1406','version-ready-v1407','version-ready-v1408','version-ready-v1409','version-ready-v1410','version-ready-v1411','version-ready-v1412','version-ready-v1413','version-ready-v1414','version-ready-v1415','version-ready-v1416','version-ready-v1417','version-ready-v1418','version-ready-v1419','version-ready-v1420','version-ready-v1421','version-ready-v1422','version-ready-v1423','version-ready-v1424','version-ready-v1425','version-ready-v1426','version-ready-v1427','version-ready-v1428','version-ready-v1429','version-ready-v1430');
 </script>
 </body></html>
